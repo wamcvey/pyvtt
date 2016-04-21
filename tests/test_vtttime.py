@@ -59,12 +59,12 @@ class TestSimpleTime(unittest.TestCase):
 
 class TestTimeParsing(unittest.TestCase):
     KNOWN_VALUES = (
-        ('00:00:00,000', (0, 0, 0, 0)),
-        ('00:00:00,001', (0, 0, 0, 1)),
-        ('00:00:02,000', (0, 0, 2, 0)),
-        ('00:03:00,000', (0, 3, 0, 0)),
-        ('04:00:00,000', (4, 0, 0, 0)),
-        ('12:34:56,789', (12, 34, 56, 789)),
+        ('00:00:00.000', (0, 0, 0, 0)),
+        ('00:00:00.001', (0, 0, 0, 1)),
+        ('00:00:02.000', (0, 0, 2, 0)),
+        ('00:03:00.000', (0, 3, 0, 0)),
+        ('04:00:00.000', (4, 0, 0, 0)),
+        ('12:34:56.789', (12, 34, 56, 789)),
     )
 
     def test_parsing(self):
@@ -76,7 +76,7 @@ class TestTimeParsing(unittest.TestCase):
             self.assertEqual(time_string, str(WebVTTTime(*time_items)))
 
     def test_negative_serialization(self):
-        self.assertEqual('00:00:00,000', str(WebVTTTime(-1, 2, 3, 4)))
+        self.assertEqual('00:00:00.000', str(WebVTTTime(-1, 2, 3, 4)))
 
     def test_invalid_time_string(self):
         self.assertRaises(InvalidTimeString, WebVTTTime.from_string, 'hello')

@@ -21,8 +21,8 @@ class TestOpen(unittest.TestCase):
     def setUp(self):
         self.static_path = os.path.join(file_path, 'tests', 'static')
         self.utf8_path = os.path.join(self.static_path, 'utf-8.vtt')
-        self.windows_path = os.path.join(self.static_path, 'windows-1252.vtt')
-        self.invalid_path = os.path.join(self.static_path, 'invalid.vtt')
+        self.windows_path = os.path.join(self.static_path, 'windows-1252.srt')
+        self.invalid_path = os.path.join(self.static_path, 'invalid.srt')
 
     def test_utf8(self):
         self.assertEqual(len(pyvtt.open(self.utf8_path)), 1332)
@@ -47,9 +47,9 @@ class TestFromString(unittest.TestCase):
     def setUp(self):
         self.static_path = os.path.join(file_path, 'tests', 'static')
         self.utf8_path = os.path.join(self.static_path, 'utf-8.vtt')
-        self.windows_path = os.path.join(self.static_path, 'windows-1252.vtt')
-        self.invalid_path = os.path.join(self.static_path, 'invalid.vtt')
-        self.temp_path = os.path.join(self.static_path, 'temp.vtt')
+        self.windows_path = os.path.join(self.static_path, 'windows-1252.srt')
+        self.invalid_path = os.path.join(self.static_path, 'invalid.srt')
+        self.temp_path = os.path.join(self.static_path, 'temp.srt')
 
     def test_utf8(self):
         unicode_content = codecs.open(self.utf8_path, encoding='utf_8').read()
@@ -70,9 +70,9 @@ class TestSerialization(unittest.TestCase):
     def setUp(self):
         self.static_path = os.path.join(file_path, 'tests', 'static')
         self.utf8_path = os.path.join(self.static_path, 'utf-8.vtt')
-        self.windows_path = os.path.join(self.static_path, 'windows-1252.vtt')
-        self.invalid_path = os.path.join(self.static_path, 'invalid.vtt')
-        self.temp_path = os.path.join(self.static_path, 'temp.vtt')
+        self.windows_path = os.path.join(self.static_path, 'windows-1252.srt')
+        self.invalid_path = os.path.join(self.static_path, 'invalid.srt')
+        self.temp_path = os.path.join(self.static_path, 'temp.srt')
 
     def test_compare_from_string_and_from_path(self):
         unicode_content = codecs.open(self.utf8_path, encoding='utf_8').read()
@@ -211,19 +211,19 @@ class TestBOM(unittest.TestCase):
         self.assertEqual(vtt_file[0].index, 1)
 
     def test_utf8(self):
-        self.__test_encoding('bom-utf-8.vtt')
+        self.__test_encoding('bom-utf-8.srt')
 
     def test_utf16le(self):
-        self.__test_encoding('bom-utf-16-le.vtt')
+        self.__test_encoding('bom-utf-16-le.srt')
 
     def test_utf16be(self):
-        self.__test_encoding('bom-utf-16-be.vtt')
+        self.__test_encoding('bom-utf-16-be.srt')
 
     def test_utf32le(self):
-        self.__test_encoding('bom-utf-32-le.vtt')
+        self.__test_encoding('bom-utf-32-le.srt')
 
     def test_utf32be(self):
-        self.__test_encoding('bom-utf-32-be.vtt')
+        self.__test_encoding('bom-utf-32-be.srt')
 
 
 class TestIntegration(unittest.TestCase):
@@ -236,7 +236,7 @@ class TestIntegration(unittest.TestCase):
         self.base_path = os.path.join(file_path, 'tests', 'static')
 
     def test_length(self):
-        path = os.path.join(self.base_path, 'capability_tester.vtt')
+        path = os.path.join(self.base_path, 'capability_tester.srt')
         file = pyvtt.open(path)
         self.assertEqual(len(file), 37)
 
@@ -249,7 +249,7 @@ class TestIntegration(unittest.TestCase):
         self.assertEqual(len(items), 0)
 
     def test_missing_indexes(self):
-        items = pyvtt.open(os.path.join(self.base_path, 'no-indexes.vtt'))
+        items = pyvtt.open(os.path.join(self.base_path, 'no-indexes.srt'))
         self.assertEquals(len(items), 7)
 
 if __name__ == '__main__':

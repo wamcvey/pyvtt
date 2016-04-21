@@ -148,20 +148,20 @@ class TestSerialAndParsing(unittest.TestCase):
         self.item = WebVTTItem(1, text="Hello world !")
         self.item.shift(minutes=1)
         self.item.end.shift(seconds=20)
-        self.string = '1\n00:01:00,000 --> 00:01:20,000\nHello world !\n'
+        self.string = '1\n00:01:00.000 --> 00:01:20.000\nHello world !\n'
         self.bad_string = 'foobar'
-        self.coordinates = ('1\n00:01:00,000 --> 00:01:20,000 X1:000 X2:000 '
+        self.coordinates = ('1\n00:01:00.000 --> 00:01:20.000 X1:000 X2:000 '
                                 'Y1:050 Y2:100\nHello world !\n')
-        self.vtt = ('1\n00:01:00,000 --> 00:01:20,000 D:vertical A:start '
+        self.vtt = ('00:01:00.000 --> 00:01:20.000 D:vertical A:start '
                                 'L:12%\nHello world !\n')
-        self.string_index = 'foo\n00:01:00,000 --> 00:01:20,000\nHello !\n'
+        self.string_index = 'foo\n00:01:00.000 --> 00:01:20.000\nHello !\n'
         self.dots = '1\n00:01:00.000 --> 00:01:20.000\nHello world !\n'
         self.no_index = '00:01:00,000 --> 00:01:20,000\nHello world !\n'
         self.junk_after_timestamp = ('1\n00:01:00,000 --> 00:01:20,000?\n'
                                 'Hello world !\n')
 
     def test_serialization(self):
-        self.assertEqual(str(self.item), self.string)
+        self.assertEqual(str(self.item), self.string[2:])
 
     def test_from_string(self):
         self.assertEqual(WebVTTItem.from_string(self.string), self.item)
@@ -176,14 +176,14 @@ class TestSerialAndParsing(unittest.TestCase):
     def test_vtt_positioning(self):
         vtt = WebVTTItem.from_string(self.vtt)
         self.assertEqual(vtt.position, 'D:vertical A:start L:12%')
-        self.assertEqual(vtt.index, 1)
+        self.assertEqual(vtt.index, None)
         self.assertEqual(vtt.text, 'Hello world !')
 
     def test_idempotence(self):
         vtt = WebVTTItem.from_string(self.vtt)
         self.assertEqual(str(vtt), self.vtt)
         item = WebVTTItem.from_string(self.coordinates)
-        self.assertEqual(str(item), self.coordinates)
+        self.assertEqual(str(item), self.coordinates[2:])
 
     def test_dots(self):
         self.assertEqual(WebVTTItem.from_string(self.dots), self.item)
