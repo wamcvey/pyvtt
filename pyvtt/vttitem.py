@@ -1,23 +1,23 @@
 # -*- coding: utf-8 -*-
 """
-SubRip's subtitle parser
+WebVTT's subtitle parser
 """
 
-from pysrt.srtexc import InvalidItem, InvalidIndex
-from pysrt.srttime import SubRipTime
-from pysrt.comparablemixin import ComparableMixin
-from pysrt.compat import str, is_py2
+from pyvtt.vttexc import InvalidItem
+from pyvtt.vtttime import WebVTTTime
+from pyvtt.comparablemixin import ComparableMixin
+from pyvtt.compat import str, is_py2
 import re
 
 
-class SubRipItem(ComparableMixin):
+class WebVTTItem(ComparableMixin):
     """
-    SubRipItem(index, start, end, text, position)
+    WebVTTItem(index, start, end, text, position)
 
     index -> int: index of item in file. 0 by default.
-    start, end -> SubRipTime or coercible.
+    start, end -> WebVTTTime or coercible.
     text -> unicode: text content for item.
-    position -> unicode: raw srt/vtt "display coordinates" string
+    position -> unicode: raw vtt "display coordinates" string
     """
     ITEM_PATTERN = str('%s\n%s --> %s%s\n%s\n')
     TIMESTAMP_SEPARATOR = '-->'
@@ -28,8 +28,8 @@ class SubRipItem(ComparableMixin):
         except (TypeError, ValueError):  # try to cast as int, but it's not mandatory
             self.index = index
 
-        self.start = SubRipTime.coerce(start or 0)
-        self.end = SubRipTime.coerce(end or 0)
+        self.start = WebVTTTime.coerce(start or 0)
+        self.end = WebVTTTime.coerce(end or 0)
         self.position = str(position)
         self.text = str(text)
 

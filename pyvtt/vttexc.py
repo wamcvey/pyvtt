@@ -5,7 +5,7 @@ Exception classes
 
 class Error(Exception):
     """
-    Pysrt's base exception
+    Pyvtt's base exception
     """
     pass
 

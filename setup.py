@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import sys
-from setuptools import setup, find_packages
+from setuptools import setup
 
 
 README = ''
@@ -17,21 +17,21 @@ REQUIRES = ['chardet']
 if sys.version_info < (2, 7):
     REQUIRES.append('argparse')
 
-setup(name='pysrt',
-      version='1.0.1',
-      author='Jean Boussier',
-      author_email='jean.boussier@gmail.com',
-      packages=['pysrt'],
-      description = "SubRip (.srt) subtitle parser and writer",
+setup(name='pyvtt',
+      version='0.0.1',
+      author='',
+      author_email='',
+      packages=['pyvtt'],
+      description = "WebVTT (.vtt) subtitle parser and writer",
       long_description=README,
       install_requires=REQUIRES,
-      entry_points={'console_scripts': ['srt = pysrt.commands:main']},
+      entry_points={'console_scripts': ['vtt = pyvtt.commands:main']},
       license="GPLv3",
       platforms=["Independent"],
-      keywords="SubRip srt subtitle",
-      url="https://github.com/byroot/pysrt",
+      keywords="WebVTT subtitle",
+      url="https://github.com/guillemcabrera/pyvtt",
       classifiers=[
-          "Development Status :: 5 - Production/Stable",
+          "Development Status :: 0 - Development",
           "Intended Audience :: Developers",
           "License :: OSI Approved :: GNU General Public License (GPL)",
           "Operating System :: OS Independent",

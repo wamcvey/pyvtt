@@ -3,4 +3,5 @@
 dist
 build
 .coverage
-pysrt.egg-info
+pyvtt.egg-info
+.idea

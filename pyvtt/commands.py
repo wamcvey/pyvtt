@@ -11,7 +11,7 @@ import argparse
 from textwrap import dedent
 
 from chardet import detect
-from pysrt import SubRipFile, SubRipTime, VERSION_STRING
+from pyvtt import WebVTTFile, WebVTTTime, VERSION_STRING
 
 
 def underline(string):
@@ -36,19 +36,19 @@ class TimeAwareArgumentParser(argparse.ArgumentParser):
         return super(TimeAwareArgumentParser, self).parse_args(args, namespace)
 
 
-class SubRipShifter(object):
+class WebVTTShifter(object):
 
     BACKUP_EXTENSION = '.bak'
     RE_TIME_STRING = re.compile(r'(\d+)([hms]{0,2})')
     UNIT_RATIOS = {
         'ms': 1,
-        '': SubRipTime.SECONDS_RATIO,
-        's': SubRipTime.SECONDS_RATIO,
-        'm': SubRipTime.MINUTES_RATIO,
-        'h': SubRipTime.HOURS_RATIO,
+        '': WebVTTTime.SECONDS_RATIO,
+        's': WebVTTTime.SECONDS_RATIO,
+        'm': WebVTTTime.MINUTES_RATIO,
+        'h': WebVTTTime.HOURS_RATIO,
     }
     DESCRIPTION = dedent("""\
-        Srt subtitle editor
+        VTT subtitle editor
 
         It can either shift, split or change the frame rate.
     """)
@@ -57,34 +57,34 @@ class SubRipShifter(object):
 
         Examples:
             1 minute and 12 seconds foreward (in place):
-                $ srt -i shift 1m12s movie.srt
+                $ vtt -i shift 1m12s movie.vtt
 
             half a second foreward:
-                $ srt shift 500ms movie.srt > othername.srt
+                $ vtt shift 500ms movie.vtt > othername.vtt
 
             1 second and half backward:
-                $ srt -i shift -1s500ms movie.srt
+                $ vtt -i shift -1s500ms movie.vtt
 
             3 seconds backward:
-                $ srt -i shift -3 movie.srt
+                $ vtt -i shift -3 movie.vtt
     """)
     RATE_EPILOG = dedent("""\
 
         Examples:
             Convert 23.9fps subtitles to 25fps:
-                $ srt -i rate 23.9 25 movie.srt
+                $ vtt -i rate 23.9 25 movie.vtt
     """)
     LIMITS_HELP = "Each parts duration in the form: [Hh][Mm]S[s][MSms]"
     SPLIT_EPILOG = dedent("""\
 
         Examples:
             For a movie in 2 parts with the first part 48 minutes and 18 seconds long:
-                $ srt split 48m18s movie.srt
-                => creates movie.1.srt and movie.2.srt
+                $ vtt split 48m18s movie.vtt
+                => creates movie.1.vtt and movie.2.vtt
 
             For a movie in 3 parts of 20 minutes each:
-                $ srt split 20m 20m movie.srt
-                => creates movie.1.srt, movie.2.srt and movie.3.srt
+                $ vtt split 20m 20m movie.vtt
+                => creates movie.1.vtt, movie.2.vtt and movie.3.vtt
     """)
     FRAME_RATE_HELP = "A frame rate in fps (commonly 23.9 or 25)"
     ENCODING_HELP = dedent("""\
@@ -195,8 +195,8 @@ class SubRipShifter(object):
                 encoding = detect(content).get('encoding')
                 encoding = self.normalize_encoding(encoding)
 
-            self._source_file = SubRipFile.open(self.arguments.file,
-                encoding=encoding, error_handling=SubRipFile.ERROR_LOG)
+            self._source_file = WebVTTFile.open(self.arguments.file,
+                                                encoding=encoding, error_handling=WebVTTFile.ERROR_LOG)
         return self._source_file
 
     @property
@@ -213,7 +213,7 @@ class SubRipShifter(object):
 
 
 def main():
-    SubRipShifter().run(sys.argv[1:])
+    WebVTTShifter().run(sys.argv[1:])
 
 if __name__ == '__main__':
     main()

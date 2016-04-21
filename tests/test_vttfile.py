@@ -4,87 +4,86 @@
 import os
 import sys
 import codecs
-from datetime import time
+
 import unittest
 import random
-from io import StringIO
 
 file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, os.path.abspath(file_path))
 
-import pysrt
-from pysrt import SubRipFile, SubRipItem, SubRipTime
-from pysrt.compat import str, open
+import pyvtt
+from pyvtt import WebVTTFile, WebVTTItem
+from pyvtt.compat import str, open
 
 
 class TestOpen(unittest.TestCase):
 
     def setUp(self):
         self.static_path = os.path.join(file_path, 'tests', 'static')
-        self.utf8_path = os.path.join(self.static_path, 'utf-8.srt')
-        self.windows_path = os.path.join(self.static_path, 'windows-1252.srt')
-        self.invalid_path = os.path.join(self.static_path, 'invalid.srt')
+        self.utf8_path = os.path.join(self.static_path, 'utf-8.vtt')
+        self.windows_path = os.path.join(self.static_path, 'windows-1252.vtt')
+        self.invalid_path = os.path.join(self.static_path, 'invalid.vtt')
 
     def test_utf8(self):
-        self.assertEqual(len(pysrt.open(self.utf8_path)), 1332)
-        self.assertEqual(pysrt.open(self.utf8_path).encoding, 'utf_8')
-        self.assertRaises(UnicodeDecodeError, pysrt.open,
-            self.windows_path)
+        self.assertEqual(len(pyvtt.open(self.utf8_path)), 1332)
+        self.assertEqual(pyvtt.open(self.utf8_path).encoding, 'utf_8')
+        self.assertRaises(UnicodeDecodeError, pyvtt.open,
+                          self.windows_path)
 
     def test_windows1252(self):
-        srt_file = pysrt.open(self.windows_path, encoding='windows-1252')
-        self.assertEqual(len(srt_file), 1332)
-        self.assertEqual(srt_file.eol, '\r\n')
-        self.assertRaises(UnicodeDecodeError, pysrt.open,
-            self.utf8_path, encoding='ascii')
+        vtt_file = pyvtt.open(self.windows_path, encoding='windows-1252')
+        self.assertEqual(len(vtt_file), 1332)
+        self.assertEqual(vtt_file.eol, '\r\n')
+        self.assertRaises(UnicodeDecodeError, pyvtt.open,
+                          self.utf8_path, encoding='ascii')
 
     def test_error_handling(self):
-        self.assertRaises(pysrt.Error, pysrt.open, self.invalid_path,
-            error_handling=SubRipFile.ERROR_RAISE)
+        self.assertRaises(pyvtt.Error, pyvtt.open, self.invalid_path,
+                          error_handling=WebVTTFile.ERROR_RAISE)
 
 
 class TestFromString(unittest.TestCase):
 
     def setUp(self):
         self.static_path = os.path.join(file_path, 'tests', 'static')
-        self.utf8_path = os.path.join(self.static_path, 'utf-8.srt')
-        self.windows_path = os.path.join(self.static_path, 'windows-1252.srt')
-        self.invalid_path = os.path.join(self.static_path, 'invalid.srt')
-        self.temp_path = os.path.join(self.static_path, 'temp.srt')
+        self.utf8_path = os.path.join(self.static_path, 'utf-8.vtt')
+        self.windows_path = os.path.join(self.static_path, 'windows-1252.vtt')
+        self.invalid_path = os.path.join(self.static_path, 'invalid.vtt')
+        self.temp_path = os.path.join(self.static_path, 'temp.vtt')
 
     def test_utf8(self):
         unicode_content = codecs.open(self.utf8_path, encoding='utf_8').read()
-        self.assertEqual(len(pysrt.from_string(unicode_content)), 1332)
+        self.assertEqual(len(pyvtt.from_string(unicode_content)), 1332)
         self.assertRaises(UnicodeDecodeError, open(self.windows_path).read)
 
     def test_windows1252(self):
-        srt_string = codecs.open(self.windows_path, encoding='windows-1252').read()
-        srt_file = pysrt.from_string(srt_string, encoding='windows-1252', eol='\r\n')
-        self.assertEqual(len(srt_file), 1332)
-        self.assertEqual(srt_file.eol, '\r\n')
-        self.assertRaises(UnicodeDecodeError, pysrt.open,
-            self.utf8_path, encoding='ascii')
+        vtt_string = codecs.open(self.windows_path, encoding='windows-1252').read()
+        vtt_file = pyvtt.from_string(vtt_string, encoding='windows-1252', eol='\r\n')
+        self.assertEqual(len(vtt_file), 1332)
+        self.assertEqual(vtt_file.eol, '\r\n')
+        self.assertRaises(UnicodeDecodeError, pyvtt.open,
+                          self.utf8_path, encoding='ascii')
 
 
 class TestSerialization(unittest.TestCase):
 
     def setUp(self):
         self.static_path = os.path.join(file_path, 'tests', 'static')
-        self.utf8_path = os.path.join(self.static_path, 'utf-8.srt')
-        self.windows_path = os.path.join(self.static_path, 'windows-1252.srt')
-        self.invalid_path = os.path.join(self.static_path, 'invalid.srt')
-        self.temp_path = os.path.join(self.static_path, 'temp.srt')
+        self.utf8_path = os.path.join(self.static_path, 'utf-8.vtt')
+        self.windows_path = os.path.join(self.static_path, 'windows-1252.vtt')
+        self.invalid_path = os.path.join(self.static_path, 'invalid.vtt')
+        self.temp_path = os.path.join(self.static_path, 'temp.vtt')
 
     def test_compare_from_string_and_from_path(self):
         unicode_content = codecs.open(self.utf8_path, encoding='utf_8').read()
-        iterator = zip(pysrt.open(self.utf8_path),
-            pysrt.from_string(unicode_content))
+        iterator = zip(pyvtt.open(self.utf8_path),
+                       pyvtt.from_string(unicode_content))
         for file_item, string_item in iterator:
             self.assertEqual(str(file_item), str(string_item))
 
     def test_save(self):
-        srt_file = pysrt.open(self.windows_path, encoding='windows-1252')
-        srt_file.save(self.temp_path, eol='\n', encoding='utf-8')
+        vtt_file = pyvtt.open(self.windows_path, encoding='windows-1252')
+        vtt_file.save(self.temp_path, eol='\n', encoding='utf-8')
         self.assertEqual(bytes(open(self.temp_path, 'rb').read()),
                           bytes(open(self.utf8_path, 'rb').read()))
         os.remove(self.temp_path)
@@ -94,8 +93,8 @@ class TestSerialization(unittest.TestCase):
         input_file.read()
         self.assertEqual(input_file.newlines, '\r\n')
 
-        srt_file = pysrt.open(self.windows_path, encoding='windows-1252')
-        srt_file.save(self.temp_path, eol='\n')
+        vtt_file = pyvtt.open(self.windows_path, encoding='windows-1252')
+        vtt_file.save(self.temp_path, eol='\n')
 
         output_file = open(self.temp_path, 'rU', encoding='windows-1252')
         output_file.read()
@@ -105,8 +104,8 @@ class TestSerialization(unittest.TestCase):
 class TestSlice(unittest.TestCase):
 
     def setUp(self):
-        self.file = pysrt.open(os.path.join(file_path, 'tests', 'static',
-            'utf-8.srt'))
+        self.file = pyvtt.open(os.path.join(file_path, 'tests', 'static',
+            'utf-8.vtt'))
 
     def test_slice(self):
         self.assertEqual(len(self.file.slice(ends_before=(1, 2, 3, 4))), 872)
@@ -124,33 +123,33 @@ class TestSlice(unittest.TestCase):
 class TestShifting(unittest.TestCase):
 
     def test_shift(self):
-        srt_file = SubRipFile([SubRipItem()])
-        srt_file.shift(1, 1, 1, 1)
-        self.assertEqual(srt_file[0].end, (1, 1, 1, 1))
-        srt_file.shift(ratio=2)
-        self.assertEqual(srt_file[0].end, (2, 2, 2, 2))
+        vtt_file = WebVTTFile([WebVTTItem()])
+        vtt_file.shift(1, 1, 1, 1)
+        self.assertEqual(vtt_file[0].end, (1, 1, 1, 1))
+        vtt_file.shift(ratio=2)
+        self.assertEqual(vtt_file[0].end, (2, 2, 2, 2))
 
 
 class TestText(unittest.TestCase):
 
     def test_single_item(self):
-        srt_file = SubRipFile([
-            SubRipItem(1, {'seconds': 1}, {'seconds': 2}, 'Hello')
+        vtt_file = WebVTTFile([
+            WebVTTItem(1, {'seconds': 1}, {'seconds': 2}, 'Hello')
         ])
-        self.assertEquals(srt_file.text, 'Hello')
+        self.assertEquals(vtt_file.text, 'Hello')
 
     def test_multiple_item(self):
-        srt_file = SubRipFile([
-            SubRipItem(1, {'seconds': 0}, {'seconds': 3}, 'Hello'),
-            SubRipItem(1, {'seconds': 1}, {'seconds': 2}, 'World !')
+        vtt_file = WebVTTFile([
+            WebVTTItem(1, {'seconds': 0}, {'seconds': 3}, 'Hello'),
+            WebVTTItem(1, {'seconds': 1}, {'seconds': 2}, 'World !')
         ])
-        self.assertEquals(srt_file.text, 'Hello\nWorld !')
+        self.assertEquals(vtt_file.text, 'Hello\nWorld !')
 
 
 class TestDuckTyping(unittest.TestCase):
 
     def setUp(self):
-        self.duck = SubRipFile()
+        self.duck = WebVTTFile()
 
     def test_act_as_list(self):
         self.assertTrue(iter(self.duck))
@@ -171,12 +170,12 @@ class TestDuckTyping(unittest.TestCase):
 class TestEOLProperty(unittest.TestCase):
 
     def setUp(self):
-        self.file = SubRipFile()
+        self.file = WebVTTFile()
 
     def test_default_value(self):
         self.assertEqual(self.file.eol, os.linesep)
-        srt_file = SubRipFile(eol='\r\n')
-        self.assertEqual(srt_file.eol, '\r\n')
+        vtt_file = WebVTTFile(eol='\r\n')
+        self.assertEqual(vtt_file.eol, '\r\n')
 
     def test_set_eol(self):
         self.file.eol = '\r\n'
@@ -186,8 +185,8 @@ class TestEOLProperty(unittest.TestCase):
 class TestCleanIndexes(unittest.TestCase):
 
     def setUp(self):
-        self.file = pysrt.open(os.path.join(file_path, 'tests', 'static',
-            'utf-8.srt'))
+        self.file = pyvtt.open(os.path.join(file_path, 'tests', 'static',
+            'utf-8.vtt'))
 
     def test_clean_indexes(self):
         random.shuffle(self.file)
@@ -207,24 +206,24 @@ class TestBOM(unittest.TestCase):
         self.base_path = os.path.join(file_path, 'tests', 'static')
 
     def __test_encoding(self, encoding):
-        srt_file = pysrt.open(os.path.join(self.base_path, encoding))
-        self.assertEqual(len(srt_file), 7)
-        self.assertEqual(srt_file[0].index, 1)
+        vtt_file = pyvtt.open(os.path.join(self.base_path, encoding))
+        self.assertEqual(len(vtt_file), 7)
+        self.assertEqual(vtt_file[0].index, 1)
 
     def test_utf8(self):
-        self.__test_encoding('bom-utf-8.srt')
+        self.__test_encoding('bom-utf-8.vtt')
 
     def test_utf16le(self):
-        self.__test_encoding('bom-utf-16-le.srt')
+        self.__test_encoding('bom-utf-16-le.vtt')
 
     def test_utf16be(self):
-        self.__test_encoding('bom-utf-16-be.srt')
+        self.__test_encoding('bom-utf-16-be.vtt')
 
     def test_utf32le(self):
-        self.__test_encoding('bom-utf-32-le.srt')
+        self.__test_encoding('bom-utf-32-le.vtt')
 
     def test_utf32be(self):
-        self.__test_encoding('bom-utf-32-be.srt')
+        self.__test_encoding('bom-utf-32-be.vtt')
 
 
 class TestIntegration(unittest.TestCase):
@@ -237,20 +236,20 @@ class TestIntegration(unittest.TestCase):
         self.base_path = os.path.join(file_path, 'tests', 'static')
 
     def test_length(self):
-        path = os.path.join(self.base_path, 'capability_tester.srt')
-        file = pysrt.open(path)
+        path = os.path.join(self.base_path, 'capability_tester.vtt')
+        file = pyvtt.open(path)
         self.assertEqual(len(file), 37)
 
     def test_empty_file(self):
-        file = pysrt.open('/dev/null', error_handling=SubRipFile.ERROR_RAISE)
+        file = pyvtt.open('/dev/null', error_handling=WebVTTFile.ERROR_RAISE)
         self.assertEqual(len(file), 0)
 
     def test_blank_lines(self):
-        items = list(pysrt.stream(['\n'] * 20, error_handling=SubRipFile.ERROR_RAISE))
+        items = list(pyvtt.stream(['\n'] * 20, error_handling=WebVTTFile.ERROR_RAISE))
         self.assertEqual(len(items), 0)
 
     def test_missing_indexes(self):
-        items = pysrt.open(os.path.join(self.base_path, 'no-indexes.srt'))
+        items = pyvtt.open(os.path.join(self.base_path, 'no-indexes.vtt'))
         self.assertEquals(len(items), 7)
 
 if __name__ == '__main__':

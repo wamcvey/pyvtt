@@ -11,9 +11,9 @@
 
 import sys
 import getopt
-from pysrt import SubRipFile
-from pysrt import SubRipItem
-from pysrt import SubRipTime
+from pyvtt import WebVTTFile
+from pyvtt import WebVTTItem
+from pyvtt import WebVTTTime
 
 
 def join_lines(txtsub1, txtsub2):
@@ -38,7 +38,7 @@ def find_subtitle(subtitle, from_t, to_t, lo=0):
 
 
 def merge_subtitle(sub_a, sub_b, delta):
-    out = SubRipFile()
+    out = WebVTTFile()
     intervals = [item.start.ordinal for item in sub_a]
     intervals.extend([item.end.ordinal for item in sub_a])
     intervals.extend([item.start.ordinal for item in sub_b])
@@ -47,8 +47,8 @@ def merge_subtitle(sub_a, sub_b, delta):
 
     j = k = 0
     for i in xrange(1, len(intervals)):
-        start = SubRipTime.from_ordinal(intervals[i-1])
-        end = SubRipTime.from_ordinal(intervals[i])
+        start = WebVTTTime.from_ordinal(intervals[i - 1])
+        end = WebVTTTime.from_ordinal(intervals[i])
 
         if (end-start) > delta:
             text_a, j = find_subtitle(sub_a, start, end, j)
@@ -56,7 +56,7 @@ def merge_subtitle(sub_a, sub_b, delta):
 
             text = join_lines(text_a, text_b)
             if len(text) > 0:
-                item = SubRipItem(0, start, end, text)
+                item = WebVTTItem(0, start, end, text)
                 out.append(item)
 
     out.clean_indexes()
@@ -81,7 +81,7 @@ def main():
         sys.exit(2)
 
     #Settings default values
-    delta = SubRipTime(milliseconds=500)
+    delta = WebVTTTime(milliseconds=500)
     encoding="utf_8"
     #-
 
@@ -91,15 +91,15 @@ def main():
 
     for o, a in opts:
         if o in ("-d", "--delta"):
-            delta = SubRipTime(milliseconds=int(a))
+            delta = WebVTTTime(milliseconds=int(a))
         elif o in ("-e", "--encoding"):
             encoding = a
         elif o in ("-h", "--help"):
             usage()
             sys.exit()
 
-    subs_a = SubRipFile.open(args[0], encoding=encoding)
-    subs_b = SubRipFile.open(args[1], encoding=encoding)
+    subs_a = WebVTTFile.open(args[0], encoding=encoding)
+    subs_b = WebVTTFile.open(args[1], encoding=encoding)
     out = merge_subtitle(subs_a, subs_b, delta)
     out.save(args[2], encoding=encoding)
 

@@ -11,9 +11,9 @@ except ImportError:
 from itertools import chain
 from copy import copy
 
-from pysrt.srtexc import Error
-from pysrt.srtitem import SubRipItem
-from pysrt.compat import str
+from pyvtt.vttexc import Error
+from pyvtt.vttitem import WebVTTItem
+from pyvtt.compat import str
 
 BOMS = ((codecs.BOM_UTF32_LE, 'utf_32_le'),
         (codecs.BOM_UTF32_BE, 'utf_32_be'),
@@ -24,19 +24,19 @@ CODECS_BOMS = dict((codec, str(bom, codec)) for bom, codec in BOMS)
 BIGGER_BOM = max(len(bom) for bom, encoding in BOMS)
 
 
-class SubRipFile(UserList, object):
+class WebVTTFile(UserList, object):
     """
-    SubRip file descriptor.
+    WebVTT file descriptor.
 
     Provide a pure Python mapping on all metadata.
 
-    SubRipFile(items, eol, path, encoding)
+    WebVTTFile(items, eol, path, encoding)
 
-    items -> list of SubRipItem. Default to [].
+    items -> list of WebVTTItem. Default to [].
     eol -> str: end of line character. Default to linesep used in opened file
         if any else to os.linesep.
     path -> str: path where file will be saved. To open an existant file see
-        SubRipFile.open.
+        WebVTTFile.open.
     encoding -> str: encoding used at file save. Default to utf-8.
     """
     ERROR_PASS = 0
@@ -63,9 +63,9 @@ class SubRipFile(UserList, object):
               ends_after=None):
         """
         slice([starts_before][, starts_after][, ends_before][, ends_after]) \
--> SubRipFile clone
+-> WebVTTFile clone
 
-        All arguments are optional, and should be coercible to SubRipTime
+        All arguments are optional, and should be coercible to WebVTTTime
         object.
 
         It reduce the set of subtitles to those that match match given time
@@ -73,7 +73,7 @@ class SubRipFile(UserList, object):
 
         The returned set is a clone, but still contains references to original
         subtitles. So if you shift this returned set, subs contained in the
-        original SubRipFile instance will be altered too.
+        original WebVTTFile instance will be altered too.
 
         Example:
             >>> subs.slice(ends_after={'seconds': 20}).shift(seconds=2)
@@ -94,9 +94,9 @@ class SubRipFile(UserList, object):
 
     def at(self, timestamp=None, **kwargs):
         """
-        at(timestamp) -> SubRipFile clone
+        at(timestamp) -> WebVTTFile clone
 
-        timestamp argument should be coercible to SubRipFile object.
+        timestamp argument should be coercible to WebVTTFile object.
 
         A specialization of slice. Return all subtiles visible at the
         timestamp mark.
@@ -157,7 +157,7 @@ class SubRipFile(UserList, object):
     @classmethod
     def from_string(cls, source, **kwargs):
         """
-        from_string(source, **kwargs) -> SubRipFile
+        from_string(source, **kwargs) -> WebVTTFile
 
         `source` -> a unicode instance or at least a str instance encoded with
         `sys.getdefaultencoding()`
@@ -186,17 +186,17 @@ class SubRipFile(UserList, object):
         """
         stream(source_file, [error_handling])
 
-        This method yield SubRipItem instances a soon as they have been parsed
-        without storing them. It is a kind of SAX parser for .srt files.
+        This method yield WebVTTItem instances a soon as they have been parsed
+        without storing them. It is a kind of SAX parser for .vtt files.
 
         `source_file` -> Any iterable that yield unicode strings, like a file
             opened with `codecs.open()` or an array of unicode.
 
         Example:
-            >>> import pysrt
+            >>> import pyvtt
             >>> import codecs
-            >>> file = codecs.open('movie.srt', encoding='utf-8')
-            >>> for sub in pysrt.stream(file):
+            >>> file = codecs.open('movie.vtt', encoding='utf-8')
+            >>> for sub in pyvtt.stream(file):
             ...     sub.text += "\nHello !"
             ...     print unicode(sub)
         """
@@ -209,7 +209,7 @@ class SubRipFile(UserList, object):
                 string_buffer = []
                 if source and all(source):
                     try:
-                        yield SubRipItem.from_lines(source)
+                        yield WebVTTItem.from_lines(source)
                     except Error as error:
                         error.args += (''.join(source), )
                         cls._handle_error(error, error_handling, index)
@@ -246,7 +246,7 @@ class SubRipFile(UserList, object):
                 string_repr = string_repr.replace('\n', output_eol)
             output_file.write(string_repr)
             # Only add trailing eol if it's not already present.
-            # It was kept in the SubRipItem's text before but it really
+            # It was kept in the WebVTTItem's text before but it really
             # belongs here. Existing applications might give us subtitles
             # which already contain a trailing eol though.
             if not string_repr.endswith(2 * output_eol):
@@ -307,6 +307,6 @@ class SubRipFile(UserList, object):
             raise error
         if error_handling == cls.ERROR_LOG:
             name = type(error).__name__
-            sys.stderr.write('PySRT-%s(line %s): \n' % (name, index))
+            sys.stderr.write('PyVTT-%s(line %s): \n' % (name, index))
             sys.stderr.write(error.args[0].encode('ascii', 'replace'))
             sys.stderr.write('\n')

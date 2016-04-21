@@ -2,21 +2,20 @@
 
 import os
 import sys
-from datetime import time
 import unittest
 
 file_path = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(file_path))
 
-from pysrt import SubRipItem, SubRipTime, InvalidItem
-from pysrt.compat import basestring
-from pysrt.compat import str
+from pyvtt import WebVTTItem, WebVTTTime, InvalidItem
+from pyvtt.compat import basestring
+from pyvtt.compat import str
 
 
 class TestAttributes(unittest.TestCase):
 
     def setUp(self):
-        self.item = SubRipItem()
+        self.item = WebVTTItem()
 
     def test_has_id(self):
         self.assertTrue(hasattr(self.item, 'index'))
@@ -28,17 +27,17 @@ class TestAttributes(unittest.TestCase):
 
     def test_has_start(self):
         self.assertTrue(hasattr(self.item, 'start'))
-        self.assertTrue(isinstance(self.item.start, SubRipTime))
+        self.assertTrue(isinstance(self.item.start, WebVTTTime))
 
     def test_has_end(self):
         self.assertTrue(hasattr(self.item, 'end'))
-        self.assertTrue(isinstance(self.item.end, SubRipTime))
+        self.assertTrue(isinstance(self.item.end, WebVTTTime))
 
 
 class TestDuration(unittest.TestCase):
 
     def setUp(self):
-        self.item = SubRipItem(1, text="Hello world !")
+        self.item = WebVTTItem(1, text="Hello world !")
         self.item.shift(minutes=1)
         self.item.end.shift(seconds=20)
 
@@ -49,7 +48,7 @@ class TestDuration(unittest.TestCase):
 class TestCPS(unittest.TestCase):
 
     def setUp(self):
-        self.item = SubRipItem(1, text="Hello world !")
+        self.item = WebVTTItem(1, text="Hello world !")
         self.item.shift(minutes=1)
         self.item.end.shift(seconds=20)
 
@@ -74,7 +73,7 @@ class TestCPS(unittest.TestCase):
 class TestTagRemoval(unittest.TestCase):
 
     def setUp(self):
-        self.item = SubRipItem(1, text="Hello world !")
+        self.item = WebVTTItem(1, text="Hello world !")
         self.item.shift(minutes=1)
         self.item.end.shift(seconds=20)
 
@@ -105,7 +104,7 @@ class TestTagRemoval(unittest.TestCase):
 class TestShifting(unittest.TestCase):
 
     def setUp(self):
-        self.item = SubRipItem(1, text="Hello world !")
+        self.item = WebVTTItem(1, text="Hello world !")
         self.item.shift(minutes=1)
         self.item.end.shift(seconds=20)
 
@@ -135,7 +134,7 @@ class TestShifting(unittest.TestCase):
 class TestOperators(unittest.TestCase):
 
     def setUp(self):
-        self.item = SubRipItem(1, text="Hello world !")
+        self.item = WebVTTItem(1, text="Hello world !")
         self.item.shift(minutes=1)
         self.item.end.shift(seconds=20)
 
@@ -146,7 +145,7 @@ class TestOperators(unittest.TestCase):
 class TestSerialAndParsing(unittest.TestCase):
 
     def setUp(self):
-        self.item = SubRipItem(1, text="Hello world !")
+        self.item = WebVTTItem(1, text="Hello world !")
         self.item.shift(minutes=1)
         self.item.end.shift(seconds=20)
         self.string = '1\n00:01:00,000 --> 00:01:20,000\nHello world !\n'
@@ -165,48 +164,48 @@ class TestSerialAndParsing(unittest.TestCase):
         self.assertEqual(str(self.item), self.string)
 
     def test_from_string(self):
-        self.assertEqual(SubRipItem.from_string(self.string), self.item)
-        self.assertRaises(InvalidItem, SubRipItem.from_string,
-            self.bad_string)
+        self.assertEqual(WebVTTItem.from_string(self.string), self.item)
+        self.assertRaises(InvalidItem, WebVTTItem.from_string,
+                          self.bad_string)
 
     def test_coordinates(self):
-        item = SubRipItem.from_string(self.coordinates)
+        item = WebVTTItem.from_string(self.coordinates)
         self.assertEqual(item, self.item)
         self.assertEqual(item.position, 'X1:000 X2:000 Y1:050 Y2:100')
 
     def test_vtt_positioning(self):
-        vtt = SubRipItem.from_string(self.vtt)
+        vtt = WebVTTItem.from_string(self.vtt)
         self.assertEqual(vtt.position, 'D:vertical A:start L:12%')
         self.assertEqual(vtt.index, 1)
         self.assertEqual(vtt.text, 'Hello world !')
 
     def test_idempotence(self):
-        vtt = SubRipItem.from_string(self.vtt)
+        vtt = WebVTTItem.from_string(self.vtt)
         self.assertEqual(str(vtt), self.vtt)
-        item = SubRipItem.from_string(self.coordinates)
+        item = WebVTTItem.from_string(self.coordinates)
         self.assertEqual(str(item), self.coordinates)
 
     def test_dots(self):
-        self.assertEqual(SubRipItem.from_string(self.dots), self.item)
+        self.assertEqual(WebVTTItem.from_string(self.dots), self.item)
 
     # Bug reported in https://github.com/byroot/pysrt/issues/16
     def test_paring_error(self):
-        self.assertRaises(InvalidItem, SubRipItem.from_string, '1\n'
+        self.assertRaises(InvalidItem, WebVTTItem.from_string, '1\n'
             '00:01:00,000 -> 00:01:20,000 X1:000 X2:000 '
             'Y1:050 Y2:100\nHello world !\n')
 
     def test_string_index(self):
-        item = SubRipItem.from_string(self.string_index)
+        item = WebVTTItem.from_string(self.string_index)
         self.assertEquals(item.index, 'foo')
         self.assertEquals(item.text, 'Hello !')
 
     def test_no_index(self):
-        item = SubRipItem.from_string(self.no_index)
+        item = WebVTTItem.from_string(self.no_index)
         self.assertEquals(item.index, None)
         self.assertEquals(item.text, 'Hello world !')
 
     def test_junk_after_timestamp(self):
-        item = SubRipItem.from_string(self.junk_after_timestamp)
+        item = WebVTTItem.from_string(self.junk_after_timestamp)
         self.assertEquals(item, self.item)
 
 if __name__ == '__main__':

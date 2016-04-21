@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-SubRip's time format parser: HH:MM:SS,mmm
+WebVTT's time format parser: HH:MM:SS,mmm
 """
 import re
 from datetime import time
 
-from pysrt.srtexc import InvalidTimeString
-from pysrt.comparablemixin import ComparableMixin
-from pysrt.compat import str, basestring
+from pyvtt.vttexc import InvalidTimeString
+from pyvtt.comparablemixin import ComparableMixin
+from pyvtt.compat import str, basestring
 
 
 class TimeItemDescriptor(object):
@@ -31,9 +31,9 @@ class TimeItemDescriptor(object):
         instance.ordinal += value * self.ratio - part
 
 
-class SubRipTime(ComparableMixin):
+class WebVTTTime(ComparableMixin):
     TIME_PATTERN = '%02d:%02d:%02d,%03d'
-    TIME_REPR = 'SubRipTime(%d, %d, %d, %d)'
+    TIME_REPR = 'WebVTTTime(%d, %d, %d, %d)'
     RE_TIME_SEP = re.compile(r'\:|\.|\,')
     RE_INTEGER = re.compile(r'^(\d+)')
     SECONDS_RATIO = 1000
@@ -47,11 +47,11 @@ class SubRipTime(ComparableMixin):
 
     def __init__(self, hours=0, minutes=0, seconds=0, milliseconds=0):
         """
-        SubRipTime(hours, minutes, seconds, milliseconds)
+        WebVTTTime(hours, minutes, seconds, milliseconds)
 
         All arguments are optional and have a default value of 0.
         """
-        super(SubRipTime, self).__init__()
+        super(WebVTTTime, self).__init__()
         self.ordinal = hours * self.HOURS_RATIO \
                      + minutes * self.MINUTES_RATIO \
                      + seconds * self.SECONDS_RATIO \
@@ -63,11 +63,11 @@ class SubRipTime(ComparableMixin):
     def __str__(self):
         if self.ordinal < 0:
             # Represent negative times as zero
-            return str(SubRipTime.from_ordinal(0))
+            return str(WebVTTTime.from_ordinal(0))
         return self.TIME_PATTERN % tuple(self)
 
     def _compare(self, other, method):
-        return super(SubRipTime, self)._compare(self.coerce(other), method)
+        return super(WebVTTTime, self)._compare(self.coerce(other), method)
 
     def _cmpkey(self):
         return self.ordinal
@@ -96,7 +96,7 @@ class SubRipTime(ComparableMixin):
     @classmethod
     def coerce(cls, other):
         """
-        Coerce many types to SubRipTime instance.
+        Coerce many types to WebVTTTime instance.
         Supported types:
           - str/unicode
           - int/long
@@ -104,7 +104,7 @@ class SubRipTime(ComparableMixin):
           - any iterable
           - dict
         """
-        if isinstance(other, SubRipTime):
+        if isinstance(other, WebVTTTime):
             return other
         if isinstance(other, basestring):
             return cls.from_string(other)
@@ -136,14 +136,14 @@ class SubRipTime(ComparableMixin):
     @classmethod
     def from_ordinal(cls, ordinal):
         """
-        int -> SubRipTime corresponding to a total count of milliseconds
+        int -> WebVTTTime corresponding to a total count of milliseconds
         """
         return cls(milliseconds=int(ordinal))
 
     @classmethod
     def from_string(cls, source):
         """
-        str/unicode(HH:MM:SS,mmm) -> SubRipTime corresponding to serial
+        str/unicode(HH:MM:SS,mmm) -> WebVTTTime corresponding to serial
         raise InvalidTimeString
         """
         items = cls.RE_TIME_SEP.split(source)
@@ -164,14 +164,14 @@ class SubRipTime(ComparableMixin):
     @classmethod
     def from_time(cls, source):
         """
-        datetime.time -> SubRipTime corresponding to time object
+        datetime.time -> WebVTTTime corresponding to time object
         """
         return cls(hours=source.hour, minutes=source.minute,
             seconds=source.second, milliseconds=source.microsecond // 1000)
 
     def to_time(self):
         """
-        Convert SubRipTime instance into a pure datetime.time object
+        Convert WebVTTTime instance into a pure datetime.time object
         """
         return time(self.hours, self.minutes, self.seconds,
                     self.milliseconds * 1000)
