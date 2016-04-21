@@ -14,12 +14,11 @@ class WebVTTItem(ComparableMixin):
     """
     WebVTTItem(index, start, end, text, position)
 
-    index -> int: index of item in file. 0 by default.
     start, end -> WebVTTTime or coercible.
     text -> unicode: text content for item.
     position -> unicode: raw vtt "display coordinates" string
     """
-    ITEM_PATTERN = str('%s\n%s --> %s%s\n%s\n')
+    ITEM_PATTERN = str('%s --> %s%s\n%s\n')
     TIMESTAMP_SEPARATOR = '-->'
 
     def __init__(self, index=0, start=None, end=None, text='', position=''):
@@ -52,7 +51,7 @@ class WebVTTItem(ComparableMixin):
 
     def __str__(self):
         position = ' %s' % self.position if self.position.strip() else ''
-        return self.ITEM_PATTERN % (self.index, self.start, self.end,
+        return self.ITEM_PATTERN % (self.start, self.end,
                                     position, self.text)
     if is_py2:
         __unicode__ = __str__

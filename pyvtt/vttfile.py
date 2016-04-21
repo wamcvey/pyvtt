@@ -239,6 +239,7 @@ class WebVTTFile(UserList, object):
         file object
         """
         output_eol = eol or self.eol
+        output_file.write("WEBVTT{0}{0}".format(output_eol))
 
         for item in self:
             string_repr = str(item)

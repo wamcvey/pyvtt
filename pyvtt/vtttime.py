@@ -32,7 +32,7 @@ class TimeItemDescriptor(object):
 
 
 class WebVTTTime(ComparableMixin):
-    TIME_PATTERN = '%02d:%02d:%02d,%03d'
+    TIME_PATTERN = '%02d:%02d:%02d.%03d'
     TIME_REPR = 'WebVTTTime(%d, %d, %d, %d)'
     RE_TIME_SEP = re.compile(r'\:|\.|\,')
     RE_INTEGER = re.compile(r'^(\d+)')
@@ -147,8 +147,14 @@ class WebVTTTime(ComparableMixin):
         raise InvalidTimeString
         """
         items = cls.RE_TIME_SEP.split(source)
-        if len(items) != 4:
+        nitems = len(items)
+
+        if ':' not in source or nitems > 4:
             raise InvalidTimeString
+
+        if nitems < 4:
+            items = ['00' for _ in xrange(4 - nitems)] + items
+
         return cls(*(cls.parse_int(i) for i in items))
 
     @classmethod
