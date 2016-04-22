@@ -38,8 +38,20 @@ class WebVTTItem(ComparableMixin):
 
     @property
     def text_without_tags(self):
-        RE_TAG = re.compile(r'<[^>]*?>')
-        return RE_TAG.sub('', self.text)
+        return re.compile(r'<[^>]*?>').sub('', self.text)
+
+    @property
+    def text_without_keys(self):
+        return re.compile(r'{[^>]*?}').sub('', self.text)
+
+    @property
+    def text_without_strange_chars(self):
+        for c in ["\\i1", "\\i0", "\\b1", "\\b0", "\\b<weight>", "\\u1", "\\u0",
+                  "\\s1", "\\s0", "\\bord<size>", "\\xbord<size>",
+                  "\\ybord<size>", "\\shad<depth>", "\\xshad<depth>",
+                  "\\yshad<depth>"]:
+            self.text = self.text.replace(c, '')
+        return self.text
 
     @property
     def characters_per_second(self):

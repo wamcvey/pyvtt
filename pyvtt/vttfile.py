@@ -136,6 +136,20 @@ class WebVTTFile(UserList, object):
         for index, item in enumerate(self):
             item.index = index + 1
 
+    def clean_text(self, tags=False, keys=False, strange=False):
+        """
+            clean_text()
+
+            Removes the indicated tags inside item's text.
+            """
+        for item in self:
+            if tags:
+                item.text = item.text_without_tags
+            if keys:
+                item.text = item.text_without_keys
+            if strange:
+                item.text = item.text_without_strange_chars
+
     @property
     def text(self):
         return '\n'.join(i.text for i in self)
