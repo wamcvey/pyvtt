@@ -136,7 +136,7 @@ class WebVTTFile(UserList, object):
         for index, item in enumerate(self):
             item.index = index + 1
 
-    def clean_text(self, tags=False, keys=False, strange=False):
+    def clean_text(self, tags=False, keys=False, strange=False, trailing=False):
         """
             clean_text()
 
@@ -149,6 +149,9 @@ class WebVTTFile(UserList, object):
                 item.text = item.text_without_keys
             if strange:
                 item.text = item.text_without_strange_chars
+            # SUGGESTION: call always last the trailing spaces cleanup
+            if trailing:
+                item.text = item.text_without_trailing_spaces
 
     @property
     def text(self):

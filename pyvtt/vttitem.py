@@ -54,6 +54,10 @@ class WebVTTItem(ComparableMixin):
         return self.text
 
     @property
+    def text_without_trailing_spaces(self):
+        return self.text.strip()
+
+    @property
     def characters_per_second(self):
         characters_count = len(self.text_without_tags.replace('\n', ''))
         try:
