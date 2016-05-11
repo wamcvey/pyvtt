@@ -34,8 +34,7 @@ class TimeItemDescriptor(object):
 class WebVTTTime(ComparableMixin):
     TIME_PATTERN = '%02d:%02d:%02d.%03d'
     TIME_REPR = 'WebVTTTime(%d, %d, %d, %d)'
-    RE_TIME_SEP = re.compile(r'\:|\.|\,')
-    RE_INTEGER = re.compile(r'^(\d+)')
+    RE_TIMECODE = re.compile(r'^(\d+):([0-5][0-9]):([0-5][0-9])(?:$|[\.\,](\d+))')
     SECONDS_RATIO = 1000
     MINUTES_RATIO = SECONDS_RATIO * 60
     HOURS_RATIO = MINUTES_RATIO * 60
@@ -146,14 +145,11 @@ class WebVTTTime(ComparableMixin):
         str/unicode(HH:MM:SS,mmm) -> WebVTTTime corresponding to serial
         raise InvalidTimeString
         """
-        items = cls.RE_TIME_SEP.split(source)
-        nitems = len(items)
-
-        if ':' not in source or nitems > 4:
+        p = cls.RE_TIMECODE.match(source)
+        try:
+            items = p.group(1,2,3,4)
+        except:
             raise InvalidTimeString
-
-        if nitems < 4:
-            items = ['00' for _ in xrange(4 - nitems)] + items
 
         return cls(*(cls.parse_int(i) for i in items))
 
@@ -161,10 +157,7 @@ class WebVTTTime(ComparableMixin):
     def parse_int(cls, digits):
         try:
             return int(digits)
-        except ValueError:
-            match = cls.RE_INTEGER.match(digits)
-            if match:
-                return int(match.group())
+        except TypeError or ValueError:
             return 0
 
     @classmethod
