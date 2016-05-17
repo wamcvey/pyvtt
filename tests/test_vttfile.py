@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import pyvtt
+from pyvtt import WebVTTFile, WebVTTItem
+from pyvtt.compat import str, open
+from pyvtt.vttexc import InvalidFile
 
 import os
 import sys
@@ -10,10 +14,6 @@ import random
 
 file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, os.path.abspath(file_path))
-
-import pyvtt
-from pyvtt import WebVTTFile, WebVTTItem
-from pyvtt.compat import str, open
 
 
 class TestOpen(unittest.TestCase):
@@ -57,8 +57,10 @@ class TestFromString(unittest.TestCase):
         self.assertRaises(UnicodeDecodeError, open(self.windows_path).read)
 
     def test_windows1252(self):
-        vtt_string = codecs.open(self.windows_path, encoding='windows-1252').read()
-        vtt_file = pyvtt.from_string(vtt_string, encoding='windows-1252', eol='\r\n')
+        vtt_string = codecs.open(
+            self.windows_path, encoding='windows-1252').read()
+        vtt_file = pyvtt.from_string(
+            vtt_string, encoding='windows-1252', eol='\r\n')
         self.assertEqual(len(vtt_file), 1332)
         self.assertEqual(vtt_file.eol, '\r\n')
         self.assertRaises(UnicodeDecodeError, pyvtt.open,
@@ -85,8 +87,15 @@ class TestSerialization(unittest.TestCase):
         vtt_file = pyvtt.open(self.windows_path, encoding='windows-1252')
         vtt_file.save(self.temp_path, eol='\n', encoding='utf-8')
         self.assertEqual(bytes(open(self.temp_path, 'rb').read()),
-                          bytes(open(self.utf8_path, 'rb').read()))
+                         bytes(open(self.utf8_path, 'rb').read()))
         os.remove(self.temp_path)
+
+    def test_save_empty_slice(self):
+        vtt_file = pyvtt.open(self.windows_path, encoding='windows-1252')
+        sliced_file = vtt_file.slice(starts_after=(0, 0, 0, 0),
+                                     ends_before=(0, 0, 0, 0))
+        self.assertEqual(len(sliced_file), 0)
+        self.assertRaises(InvalidFile, sliced_file.save, self.temp_path)
 
     def test_eol_conversion(self):
         input_file = open(self.windows_path, 'rU', encoding='windows-1252')
@@ -105,15 +114,15 @@ class TestSlice(unittest.TestCase):
 
     def setUp(self):
         self.file = pyvtt.open(os.path.join(file_path, 'tests', 'static',
-            'utf-8.vtt'))
+                                            'utf-8.vtt'))
 
     def test_slice(self):
         self.assertEqual(len(self.file.slice(ends_before=(1, 2, 3, 4))), 872)
         self.assertEqual(len(self.file.slice(ends_after=(1, 2, 3, 4))), 460)
         self.assertEqual(len(self.file.slice(starts_before=(1, 2, 3, 4))),
-                          873)
+                         873)
         self.assertEqual(len(self.file.slice(starts_after=(1, 2, 3, 4))),
-                          459)
+                         459)
 
     def test_at(self):
         self.assertEquals(len(self.file.at((0, 0, 31, 0))), 1)
@@ -186,7 +195,7 @@ class TestCleanIndexes(unittest.TestCase):
 
     def setUp(self):
         self.file = pyvtt.open(os.path.join(file_path, 'tests', 'static',
-            'utf-8.vtt'))
+                                            'utf-8.vtt'))
 
     def test_clean_indexes(self):
         random.shuffle(self.file)
@@ -194,7 +203,7 @@ class TestCleanIndexes(unittest.TestCase):
             item.index = random.randint(0, 1000)
         self.file.clean_indexes()
         self.assertEqual([i.index for i in self.file],
-                          list(range(1, len(self.file) + 1)))
+                         list(range(1, len(self.file) + 1)))
         for first, second in zip(self.file[:-1], self.file[1:]):
             self.assertTrue(first <= second)
 
@@ -241,11 +250,12 @@ class TestIntegration(unittest.TestCase):
         self.assertEqual(len(file), 37)
 
     def test_empty_file(self):
-        file = pyvtt.open('/dev/null', error_handling=WebVTTFile.ERROR_RAISE)
-        self.assertEqual(len(file), 0)
+        self.assertRaises(InvalidFile, pyvtt.open, '/dev/null',
+                          error_handling=WebVTTFile.ERROR_RAISE)
 
     def test_blank_lines(self):
-        items = list(pyvtt.stream(['\n'] * 20, error_handling=WebVTTFile.ERROR_RAISE))
+        items = list(pyvtt.stream(['\n'] * 20,
+                     error_handling=WebVTTFile.ERROR_RAISE))
         self.assertEqual(len(items), 0)
 
     def test_missing_indexes(self):
