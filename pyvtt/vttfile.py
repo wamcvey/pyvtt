@@ -11,7 +11,7 @@ except ImportError:
 from itertools import chain
 from copy import copy
 
-from pyvtt.vttexc import Error
+from pyvtt.vttexc import Error, InvalidFile
 from pyvtt.vttitem import WebVTTItem
 from pyvtt.compat import str
 
@@ -136,7 +136,8 @@ class WebVTTFile(UserList, object):
         for index, item in enumerate(self):
             item.index = index + 1
 
-    def clean_text(self, tags=False, keys=False, strange=False, trailing=False):
+    def clean_text(self, tags=False, keys=False,
+                   strange=False, trailing=False):
         """
             clean_text()
 
@@ -165,7 +166,8 @@ class WebVTTFile(UserList, object):
         If you do not provide any encoding, it can be detected if the file
         contain a bit order mark, unless it is set to utf-8 as default.
         """
-        source_file, encoding = cls._open_unicode_file(path, claimed_encoding=encoding)
+        source_file, encoding = cls._open_unicode_file(
+            path, claimed_encoding=encoding)
         new_file = cls(path=path, encoding=encoding)
         new_file.read(source_file, error_handling=error_handling)
         source_file.close()
@@ -196,6 +198,7 @@ class WebVTTFile(UserList, object):
         """
         self.eol = self._guess_eol(source_file)
         self.extend(self.stream(source_file, error_handling=error_handling))
+        self._check_valid_len()
         return self
 
     @classmethod
@@ -255,6 +258,7 @@ class WebVTTFile(UserList, object):
         `output_file` -> Any instance that respond to `write()`, typically a
         file object
         """
+        self._check_valid_len()
         output_eol = eol or self.eol
         output_file.write("WEBVTT{0}{0}".format(output_eol))
 
@@ -269,6 +273,10 @@ class WebVTTFile(UserList, object):
             # which already contain a trailing eol though.
             if not string_repr.endswith(2 * output_eol):
                 output_file.write(output_eol)
+
+    def _check_valid_len(self):
+        if len(self) < 1:
+            raise InvalidFile()
 
     @classmethod
     def _guess_eol(cls, string_iterable):
