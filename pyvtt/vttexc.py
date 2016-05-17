@@ -29,3 +29,10 @@ class InvalidIndex(InvalidItem):
     Raised when parser fail to parse a sub title index
     """
     pass
+
+
+class InvalidFile(Error):
+    """
+    Raised when an invalid file is read or saved
+    """
+    pass
