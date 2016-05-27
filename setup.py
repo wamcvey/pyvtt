@@ -29,6 +29,7 @@ setup(name='pyvtt',
       entry_points={'console_scripts': ['vtt = pyvtt.commands:main']},
       license="GPLv3",
       platforms=["Independent"],
+      test_suite="tests",
       keywords="WebVTT subtitle",
       url="https://github.com/guillemcabrera/pyvtt",
       classifiers=[

@@ -146,5 +146,25 @@ class TestOperators(unittest.TestCase):
         self.time *= 0.5
         self.assertEqual(self.time, (1, 2, 3, 4))
 
+
+class TestCompareWithReference(unittest.TestCase):
+    def setUp(self):
+        pass        
+    def test_compare_start(self):
+        pass
+    def test_compare_stop(self):
+        pass
+    def test_compare_start_stop(self):
+        pass
+
+"""
+    def test_compare_duration_with_ref(self):
+        self.ref_path_dur = os.path.join(self.static_path, 'ref_dur.vtt')
+        self.vtt_file_ref = pyvtt.open(self.ref_path2, encoding='utf_8')             # Reference file (clean)
+        vtt_file_ut = pyvtt.open(self.test_duration_path, encoding='utf_8')
+        vtt_file_ut.clean_text(tags=True, keys=False, strange=False, trailing=False) # Only keys removal is enabled.
+        self.assertEqual(self.vtt_file_ref.text, vtt_file_ut.text)"""
+
+
 if __name__ == '__main__':
     unittest.main()

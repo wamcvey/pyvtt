@@ -24,6 +24,10 @@ CODECS_BOMS = dict((codec, str(bom, codec)) for bom, codec in BOMS)
 BIGGER_BOM = max(len(bom) for bom, encoding in BOMS)
 
 
+reload(sys)  
+sys.setdefaultencoding('utf-8')
+
+
 class WebVTTFile(UserList, object):
     """
     WebVTT file descriptor.
@@ -249,7 +253,7 @@ class WebVTTFile(UserList, object):
         self.write_into(save_file, eol=eol)
         save_file.close()
 
-    def write_into(self, output_file, eol=None):
+    def write_into(self, output_file, eol=None, encoding=None):
         """
         write_into(output_file [, eol])
 
@@ -273,6 +277,7 @@ class WebVTTFile(UserList, object):
             # which already contain a trailing eol though.
             if not string_repr.endswith(2 * output_eol):
                 output_file.write(output_eol)
+                
 
     def _check_valid_len(self):
         if len(self) < 1:

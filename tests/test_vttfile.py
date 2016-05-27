@@ -8,6 +8,7 @@ from pyvtt.vttexc import InvalidFile
 import os
 import sys
 import codecs
+import io
 
 import unittest
 import random
@@ -65,6 +66,42 @@ class TestFromString(unittest.TestCase):
         self.assertEqual(vtt_file.eol, '\r\n')
         self.assertRaises(UnicodeDecodeError, pyvtt.open,
                           self.utf8_path, encoding='ascii')
+                          
+                          
+class TestCompareWithReference(unittest.TestCase):
+    
+    def setUp(self):
+        self.static_path = os.path.join(file_path, 'tests', 'vtt_test')
+        self.ref_path = os.path.join(self.static_path, 'ref.vtt')
+        self.test_tags_path = os.path.join(self.static_path, 'test_tags.vtt')
+        self.test_keys_path = os.path.join(self.static_path, 'test_keys.vtt')
+        self.test_strange_chars_path = os.path.join(self.static_path, 'test_strange_chars.vtt')
+        self.test_trailings_path = os.path.join(self.static_path, 'test_trailings.vtt')
+        self.test_duration_path = os.path.join(self.static_path, 'test_duration.vtt')
+        self.vtt_file_ref = pyvtt.open(self.ref_path, encoding='utf_8')             # Reference file (clean, no tags/keys/strangechars)
+
+    def test_compare_tags_with_ref(self):
+        vtt_file_ut = pyvtt.open(self.test_tags_path, encoding='utf_8')
+        vtt_file_ut.clean_text(tags=True, keys=False, strange=False, trailing=False) # Only tags removal is enabled.
+        self.assertEqual(self.vtt_file_ref.text, vtt_file_ut.text)
+
+    def test_compare_keys_with_ref(self):
+        vtt_file_ut = pyvtt.open(self.test_keys_path, encoding='utf_8')
+        vtt_file_ut.clean_text(tags=False, keys=True, strange=False, trailing=False) # Only keys removal is enabled.
+        self.assertEqual(self.vtt_file_ref.text, vtt_file_ut.text)
+
+    def test_compare_strange_chars_with_ref(self):
+        vtt_file_ut = pyvtt.open(self.test_strange_chars_path, encoding='utf_8')
+        vtt_file_ut.clean_text(tags=False, keys=False, strange=True, trailing=False) # Only strange characters removal is enabled.
+        self.assertEqual(self.vtt_file_ref.text, vtt_file_ut.text)
+
+    def test_compare_trailings_with_ref(self):
+        self.ref_path2 = os.path.join(self.static_path, 'ref2.vtt')
+        self.vtt_file_ref2 = pyvtt.open(self.ref_path2, encoding='utf_8')               # Reference file (clean, no whitespaces)
+        vtt_file_ut = pyvtt.open(self.test_trailings_path, encoding='utf_8')
+        vtt_file_ut.clean_text(tags=False, keys=False, strange=False, trailing=True)    # Only trailing removal (whitespaces at end(beginning) is enabled. 
+        
+        self.assertEqual(self.vtt_file_ref2.text, vtt_file_ut.text)
 
 
 class TestSerialization(unittest.TestCase):
@@ -83,7 +120,7 @@ class TestSerialization(unittest.TestCase):
         for file_item, string_item in iterator:
             self.assertEqual(str(file_item), str(string_item))
 
-    def test_save(self):
+    def test_save_new_eol_and_encoding(self):
         vtt_file = pyvtt.open(self.windows_path, encoding='windows-1252')
         vtt_file.save(self.temp_path, eol='\n', encoding='utf-8')
         self.assertEqual(bytes(open(self.temp_path, 'rb').read()),
@@ -97,17 +134,73 @@ class TestSerialization(unittest.TestCase):
         self.assertEqual(len(sliced_file), 0)
         self.assertRaises(InvalidFile, sliced_file.save, self.temp_path)
 
-    def test_eol_conversion(self):
-        input_file = open(self.windows_path, 'rU', encoding='windows-1252')
-        input_file.read()
-        self.assertEqual(input_file.newlines, '\r\n')
+    def test_save_overwrite(self):
+        overwrite_source_path1 = os.path.join(file_path, 'tests', 'vtt_test', 'overwrite_source1.vtt')
+        overwrite_source_path2 = os.path.join(file_path, 'tests', 'vtt_test', 'overwrite_source2.vtt')
+        overwrite_target_path = os.path.join(file_path, 'tests', 'vtt_test', 'overwrite_target.vtt')
 
-        vtt_file = pyvtt.open(self.windows_path, encoding='windows-1252')
-        vtt_file.save(self.temp_path, eol='\n')
+        vtt_file1 = pyvtt.open(overwrite_source_path1, encoding='utf-8')
+        vtt_file1.save(overwrite_target_path, eol=vtt_file1._eol, encoding=vtt_file1.encoding)
+        self.assertEqual(bytes(open(overwrite_source_path1, 'rb').read()),
+                          bytes(open(overwrite_target_path, 'rb').read()))
 
-        output_file = open(self.temp_path, 'rU', encoding='windows-1252')
-        output_file.read()
-        self.assertEqual(output_file.newlines, '\n')
+        vtt_file2 = pyvtt.open(overwrite_source_path2, encoding='utf-8')
+        vtt_file2.save(overwrite_target_path, eol=vtt_file2._eol, encoding=vtt_file2.encoding)
+        self.assertEqual(bytes(open(overwrite_source_path2, 'rb').read()),
+                          bytes(open(overwrite_target_path, 'rb').read()))
+
+        os.remove(overwrite_target_path)
+
+    def test_eol_convertion(self):
+
+        self.temp_eol_path = os.path.join(self.static_path, 'temp_eol_conv.vtt')
+        end_of_lines = ['\n', '\r', '\r\n']
+        enc = 'utf-8'
+
+        for eols in end_of_lines:
+            input_eol = open(self.temp_eol_path, 'wb')
+            input_eol.write(str('00:01:00,000 --> 00:02:00,000' + eols + 'TestEOLConvertion' + eols))
+            input_eol.close()
+            
+            input_file = open(self.temp_eol_path, 'rU', encoding=enc)
+            input_file.read()
+            self.assertEqual(input_file.newlines, eols)
+            
+            vtt_file = pyvtt.open(self.temp_eol_path, encoding=enc)
+            vtt_file.save(self.temp_eol_path, eol='\n')
+
+            output_file = open(self.temp_eol_path, 'rU', encoding=enc)
+            output_file.read()
+            self.assertEqual(output_file.newlines, '\n')
+
+            os.remove(self.temp_eol_path)
+
+
+    def test_eol_preservation(self):
+
+        # Tests input eol is kept after saving
+
+        self.temp_eol_path = os.path.join(self.static_path, 'temp_eol_preserv.vtt')
+        end_of_lines = ['\n', '\r', '\r\n']
+        enc = 'utf-8'
+
+        for eols in end_of_lines:
+            input_eol = open(self.temp_eol_path, 'wb')
+            input_eol.write(str('00:01:00,000 --> 00:02:00,000' + eols + 'TestEOLPreservation' + eols))
+            input_eol.close()
+            
+            input_file = open(self.temp_eol_path, 'rU', encoding=enc)
+            input_file.read()
+            self.assertEqual(eols, input_file.newlines)
+
+            vtt_file = pyvtt.open(self.temp_eol_path, encoding=enc)
+            vtt_file.save(self.temp_eol_path, eol=input_file.newlines)
+            
+            output_file = open(self.temp_eol_path, 'rU', encoding=enc)
+            output_file.read()
+            self.assertEqual(output_file.newlines, input_file.newlines)
+
+            os.remove(self.temp_eol_path)
 
 
 class TestSlice(unittest.TestCase):
