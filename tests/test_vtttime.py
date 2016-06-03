@@ -4,6 +4,7 @@ import os
 import sys
 from datetime import time
 import unittest
+import random
 
 file_path = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, os.path.abspath(file_path))
@@ -49,9 +50,16 @@ class TestSimpleTime(unittest.TestCase):
         self.time.minutes += 42
         self.assertEqual(self.time.hours, 1)
 
-    def test_shifting(self):
+    def test_shifting_forward(self):
         self.time.shift(1, 1, 1, 1)
         self.assertEqual(self.time, (1, 1, 1, 1))
+
+    def test_shifting_backwards(self):
+        self.time.shift(-1, -1, -1, -1)
+        self.assertEqual(self.time, (-2, 58, 58, 999))
+        self.time = WebVTTTime(1,2,3,4)
+        self.time.shift(-1, -1, -1, -1)
+        self.assertEqual(self.time, (0, 1, 2, 3))
 
     def test_descriptor_from_class(self):
         self.assertRaises(AttributeError, lambda: WebVTTTime.hours)
@@ -77,9 +85,33 @@ class TestTimeParsing(unittest.TestCase):
 
     def test_negative_serialization(self):
         self.assertEqual('00:00:00.000', str(WebVTTTime(-1, 2, 3, 4)))
+        self.assertEqual('00:00:00.000', str(WebVTTTime(-sys.maxint, 2, 3, 4)))
+        self.assertEqual('00:00:00.000', str(WebVTTTime(0, -2, 3, 4)))
+        self.assertEqual('00:00:00.000', str(WebVTTTime(0, 0, -3, 4)))
+        self.assertEqual('00:00:00.000', str(WebVTTTime(0, 0, 0, -4)))
+
 
     def test_invalid_time_string(self):
-        self.assertRaises(InvalidTimeString, WebVTTTime.from_string, 'hello')
+        self.assertRaises(InvalidTimeString, WebVTTTime.from_string, 'test')
+
+    def test_invalid_int(self):
+        random_long = long(random.choice(range(0,10000000)))
+        self.assertRaises(ValueError, lambda: WebVTTTime.parse_int('test'))             # String
+        self.assertRaises(ValueError, lambda: WebVTTTime.parse_int(bin(42)))            # Binary
+        self.assertRaises(ValueError, lambda: WebVTTTime.parse_int('t'))                # Char
+        self.assertRaises(TypeError, WebVTTTime.parse_int)                              # None
+        self.assertRaises(TypeError, WebVTTTime.parse_int(None))                        # None
+        self.assertRaises(TypeError, WebVTTTime.parse_int(range(10)))                   # List
+        self.assertRaises(TypeError, WebVTTTime.parse_int((1,1)))                       # Tuple
+        self.assertRaises(TypeError, WebVTTTime.parse_int(True))                        # Boolean
+        self.assertRaises(TypeError, WebVTTTime.parse_int(random.uniform(1,100)))       # Float    
+        self.assertRaises(TypeError, WebVTTTime.parse_int(1j))                          # Complex
+        self.assertRaises(TypeError, WebVTTTime.parse_int(random_long))                 # Long
+        self.assertRaises(TypeError, WebVTTTime.parse_int({'Test1': 1, 'Test0': 0}))    # Dictionary
+
+    def test_max_values(self):
+        self.assertEqual('99:59:59.999', str(WebVTTTime(99, 59, 59, 999)))
+        self.assertEqual('100:40:39.999', str(WebVTTTime(99, 99, 99, 999)))
 
 
 class TestCoercing(unittest.TestCase):
@@ -116,6 +148,12 @@ class TestCoercing(unittest.TestCase):
         self.assertEqual(WebVTTTime.from_ordinal(3600000), {'hours': 1})
         self.assertEqual(WebVTTTime(1), 3600000)
 
+    def test_from_repr(self):
+        self.time = WebVTTTime()
+        self.assertEqual('WebVTTTime(0, 0, 0, 0)', self.time.__repr__())
+        self.time = WebVTTTime(1,1,1,1)
+        self.assertEqual('WebVTTTime(1, 1, 1, 1)', self.time.__repr__())
+
 
 class TestOperators(unittest.TestCase):
 
@@ -145,25 +183,6 @@ class TestOperators(unittest.TestCase):
         self.assertEqual(self.time,  (2, 4, 6, 8))
         self.time *= 0.5
         self.assertEqual(self.time, (1, 2, 3, 4))
-
-
-class TestCompareWithReference(unittest.TestCase):
-    def setUp(self):
-        pass        
-    def test_compare_start(self):
-        pass
-    def test_compare_stop(self):
-        pass
-    def test_compare_start_stop(self):
-        pass
-
-"""
-    def test_compare_duration_with_ref(self):
-        self.ref_path_dur = os.path.join(self.static_path, 'ref_dur.vtt')
-        self.vtt_file_ref = pyvtt.open(self.ref_path2, encoding='utf_8')             # Reference file (clean)
-        vtt_file_ut = pyvtt.open(self.test_duration_path, encoding='utf_8')
-        vtt_file_ut.clean_text(tags=True, keys=False, strange=False, trailing=False) # Only keys removal is enabled.
-        self.assertEqual(self.vtt_file_ref.text, vtt_file_ut.text)"""
 
 
 if __name__ == '__main__':

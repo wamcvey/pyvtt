@@ -72,7 +72,7 @@ class WebVTTFile(UserList, object):
         All arguments are optional, and should be coercible to WebVTTTime
         object.
 
-        It reduce the set of subtitles to those that match match given time
+        It reduces the set of subtitles to those that match match given time
         constraints.
 
         The returned set is a clone, but still contains references to original
@@ -94,6 +94,7 @@ class WebVTTFile(UserList, object):
             clone.data = (i for i in clone.data if i.end > ends_after)
 
         clone.data = list(clone.data)
+
         return clone
 
     def at(self, timestamp=None, **kwargs):

@@ -39,8 +39,8 @@ class TestOpen(unittest.TestCase):
                           self.utf8_path, encoding='ascii')
 
     def test_error_handling(self):
-        self.assertRaises(pyvtt.Error, pyvtt.open, self.invalid_path,
-                          error_handling=WebVTTFile.ERROR_RAISE)
+        self.assertRaises(pyvtt.Error, pyvtt.open, self.invalid_path, error_handling=WebVTTFile.ERROR_RAISE)
+        self.assertRaises(pyvtt.Error, pyvtt.open, self.invalid_path, error_handling=WebVTTFile.ERROR_LOG)
 
 
 class TestFromString(unittest.TestCase):
@@ -73,35 +73,80 @@ class TestCompareWithReference(unittest.TestCase):
     def setUp(self):
         self.static_path = os.path.join(file_path, 'tests', 'vtt_test')
         self.ref_path = os.path.join(self.static_path, 'ref.vtt')
+        self.ref_dur_shifted_path = os.path.join(self.static_path, 'ref_duration_shifted.vtt')
+        self.ref_dur_sliced_path = os.path.join(self.static_path, 'ref_duration_sliced.vtt')       
         self.test_tags_path = os.path.join(self.static_path, 'test_tags.vtt')
         self.test_keys_path = os.path.join(self.static_path, 'test_keys.vtt')
         self.test_strange_chars_path = os.path.join(self.static_path, 'test_strange_chars.vtt')
         self.test_trailings_path = os.path.join(self.static_path, 'test_trailings.vtt')
         self.test_duration_path = os.path.join(self.static_path, 'test_duration.vtt')
-        self.vtt_file_ref = pyvtt.open(self.ref_path, encoding='utf_8')             # Reference file (clean, no tags/keys/strangechars)
+        self.vtt_file_ref = pyvtt.open(self.ref_path, encoding='utf_8')                 # Reference file (clean, no tags/keys/strangechars)
 
     def test_compare_tags_with_ref(self):
         vtt_file_ut = pyvtt.open(self.test_tags_path, encoding='utf_8')
-        vtt_file_ut.clean_text(tags=True, keys=False, strange=False, trailing=False) # Only tags removal is enabled.
+        vtt_file_ut.clean_text(tags=True, keys=False, strange=False, trailing=False)    # Only tags removal is enabled.
         self.assertEqual(self.vtt_file_ref.text, vtt_file_ut.text)
 
     def test_compare_keys_with_ref(self):
         vtt_file_ut = pyvtt.open(self.test_keys_path, encoding='utf_8')
-        vtt_file_ut.clean_text(tags=False, keys=True, strange=False, trailing=False) # Only keys removal is enabled.
+        vtt_file_ut.clean_text(tags=False, keys=True, strange=False, trailing=False)    # Only keys removal is enabled.
         self.assertEqual(self.vtt_file_ref.text, vtt_file_ut.text)
 
     def test_compare_strange_chars_with_ref(self):
         vtt_file_ut = pyvtt.open(self.test_strange_chars_path, encoding='utf_8')
-        vtt_file_ut.clean_text(tags=False, keys=False, strange=True, trailing=False) # Only strange characters removal is enabled.
+        vtt_file_ut.clean_text(tags=False, keys=False, strange=True, trailing=False)    # Only strange characters removal is enabled.
         self.assertEqual(self.vtt_file_ref.text, vtt_file_ut.text)
 
     def test_compare_trailings_with_ref(self):
-        self.ref_path2 = os.path.join(self.static_path, 'ref2.vtt')
-        self.vtt_file_ref2 = pyvtt.open(self.ref_path2, encoding='utf_8')               # Reference file (clean, no whitespaces)
+        ref_path2 = os.path.join(self.static_path, 'ref_notrailings.vtt')
+        vtt_file_ref2 = pyvtt.open(ref_path2, encoding='utf_8')                         # Reference file (clean, no whitespaces).
         vtt_file_ut = pyvtt.open(self.test_trailings_path, encoding='utf_8')
         vtt_file_ut.clean_text(tags=False, keys=False, strange=False, trailing=True)    # Only trailing removal (whitespaces at end(beginning) is enabled. 
-        
-        self.assertEqual(self.vtt_file_ref2.text, vtt_file_ut.text)
+        self.assertEqual(vtt_file_ref2.text, vtt_file_ut.text)
+
+    def test_compare_shift_with_ref(self):
+        vtt_file_ref = pyvtt.open(self.ref_dur_shifted_path, encoding='utf_8')
+        vtt_file_ut1 = pyvtt.open(self.test_duration_path, encoding='utf_8')
+        vtt_file_ut2 = pyvtt.open(self.test_duration_path, encoding='utf_8')
+        ref_ratio_path = os.path.join(self.static_path, 'ref_duration_ratio.vtt')
+        vtt_file_ref_ratio = pyvtt.open(ref_ratio_path, encoding='utf_8')
+
+        vtt_file_ut1.shift(hours=5, minutes=5, seconds=5, milliseconds=500)             # Shifted 5 hours, 5 minutes, 5 seconds, 500 milliseconds.
+        self.assertEqual(vtt_file_ut1, vtt_file_ref)
+        vtt_file_ut1.shift(hours=-5, minutes=-5, seconds=-5, milliseconds=-500)         # Shifted BACK 5 hours, 5 minutes, 5 seconds, 500 milliseconds.
+        self.assertEqual(vtt_file_ut1, vtt_file_ut2)
+        vtt_file_ut1.shift(ratio=2)
+        self.assertEqual(vtt_file_ut1, vtt_file_ref_ratio)                              # Shifted with a ratio of 2.
+
+    def test_compare_slice_with_ref(self):
+        vtt_file_ref = pyvtt.open(self.ref_dur_sliced_path, encoding='utf_8')
+        vtt_file_source = pyvtt.open(self.test_duration_path, encoding='utf_8')
+        temp_file_path = os.path.join(self.static_path, 'temp_test.vtt')
+
+        vtt_file_ut = vtt_file_source.slice(starts_after={'minutes': 2})
+        self.assertRaises(InvalidFile, vtt_file_ut.save, temp_file_path)
+        os.remove(temp_file_path)
+
+        vtt_file_ut = vtt_file_source.slice(starts_after={'seconds': 20}, ends_before={'seconds': 42})
+        vtt_file_ut.save(temp_file_path, eol='\n', encoding='utf_8')
+        self.assertEqual(vtt_file_ut, vtt_file_ref)
+        os.remove(temp_file_path)
+
+        vtt_file_ut = vtt_file_source.slice(starts_after={'seconds': -20}, ends_before={'seconds': -42})
+        self.assertRaises(InvalidFile, vtt_file_ut.save, temp_file_path)
+        os.remove(temp_file_path)
+
+        vtt_file_ut = vtt_file_source.slice(ends_before={'seconds': 42}, ends_after={'seconds': 40})        # ends_before > ends_after
+        self.assertRaises(InvalidFile, vtt_file_ut.save, temp_file_path)
+        os.remove(temp_file_path)
+
+        vtt_file_ut = vtt_file_source.slice(starts_before={'seconds': 10}, starts_after={'seconds': 30})    # starts_before < starts_after
+        self.assertRaises(InvalidFile, vtt_file_ut.save, temp_file_path)
+        os.remove(temp_file_path)
+
+        vtt_file_ut = vtt_file_source.slice(starts_after={'seconds': 42}, ends_before={'seconds': 30})      # starts_after > ends_before
+        self.assertRaises(InvalidFile, vtt_file_ut.save, temp_file_path)
+        os.remove(temp_file_path)
 
 
 class TestSerialization(unittest.TestCase):
@@ -206,16 +251,13 @@ class TestSerialization(unittest.TestCase):
 class TestSlice(unittest.TestCase):
 
     def setUp(self):
-        self.file = pyvtt.open(os.path.join(file_path, 'tests', 'static',
-                                            'utf-8.vtt'))
+        self.file = pyvtt.open(os.path.join(file_path, 'tests', 'static', 'utf-8.vtt'))
 
     def test_slice(self):
         self.assertEqual(len(self.file.slice(ends_before=(1, 2, 3, 4))), 872)
         self.assertEqual(len(self.file.slice(ends_after=(1, 2, 3, 4))), 460)
-        self.assertEqual(len(self.file.slice(starts_before=(1, 2, 3, 4))),
-                         873)
-        self.assertEqual(len(self.file.slice(starts_after=(1, 2, 3, 4))),
-                         459)
+        self.assertEqual(len(self.file.slice(starts_before=(1, 2, 3, 4))), 873)
+        self.assertEqual(len(self.file.slice(starts_after=(1, 2, 3, 4))), 459)
 
     def test_at(self):
         self.assertEquals(len(self.file.at((0, 0, 31, 0))), 1)

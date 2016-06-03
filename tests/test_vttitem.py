@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.abspath(file_path))
 from pyvtt import WebVTTItem, WebVTTTime, InvalidItem
 from pyvtt.compat import basestring
 from pyvtt.compat import str
+from pyvtt import comparablemixin as cm
 
 
 class TestAttributes(unittest.TestCase):
@@ -135,7 +136,7 @@ class TestShifting(unittest.TestCase):
 class TestOperators(unittest.TestCase):
 
     def setUp(self):
-        self.item = WebVTTItem(1, text="Hello world !")
+        self.item = WebVTTItem(1, text="Hello world!")
         self.item.shift(minutes=1)
         self.item.end.shift(seconds=20)
 
