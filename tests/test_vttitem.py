@@ -11,7 +11,6 @@ sys.path.insert(0, os.path.abspath(file_path))
 from pyvtt import WebVTTItem, WebVTTTime, InvalidItem
 from pyvtt.compat import basestring
 from pyvtt.compat import str
-from pyvtt import comparablemixin as cm
 
 
 class TestAttributes(unittest.TestCase):
@@ -213,13 +212,7 @@ class TestSerialAndParsing(unittest.TestCase):
     def test_is_unicode(self):
         # Defining non_unicode encodings list as defined in 
         # https://docs.python.org/2/library/codecs.html#standard-encodings
-        non_unicode_encodings = ['big5', 'big5hkscs', #'cp037', 'cp424', 'cp437', 
-                                 #'cp500', 'cp720', 'cp737', 'cp775', 'cp850', 
-                                 #'cp852', 'cp855', 'cp856', 'cp857', 'cp858', 
-                                 #'cp860', 'cp861', 'cp862', 'cp863', 'cp864', 
-                                 #'cp865', 'cp866', 'cp869', 'cp874', 'cp875', 
-                                 #'cp932', 'cp949', 'cp950', 'cp1006', 'cp1026', 
-                                 #'cp1140',
+        non_unicode_encodings = ['big5', 'big5hkscs', 
                                  'cp1250', 'cp1251', 'cp1252', 'cp1253', 
                                  'cp1254', 'cp1255', 'cp1256', 'cp1257', 'cp1258', 
                                  'euc_jp', 'euc_jis_2004', 'euc_jisx0213', 'euc_kr', 
@@ -234,7 +227,6 @@ class TestSerialAndParsing(unittest.TestCase):
                                  'mac_iceland', 'mac_latin2', 'mac_roman', 'mac_turkish', 
                                  'ptcp154', 'shift_jis', 'shift_jis_2004', 'shift_jisx0213']
         for enc in non_unicode_encodings:
-            #print enc
             non_unicode = codecs.encode('non_unicode\n', enc)
             self.no_unicode_item = WebVTTItem(1, text=non_unicode)
             self.assertRaises(NotImplementedError, WebVTTItem.__str__, self.no_unicode_item)
