@@ -24,10 +24,6 @@ CODECS_BOMS = dict((codec, str(bom, codec)) for bom, codec in BOMS)
 BIGGER_BOM = max(len(bom) for bom, encoding in BOMS)
 
 
-reload(sys)  
-sys.setdefaultencoding('utf-8')
-
-
 class WebVTTFile(UserList, object):
     """
     WebVTT file descriptor.
