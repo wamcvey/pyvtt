@@ -5,3 +5,4 @@ build
 .coverage
 pyvtt.egg-info
 .idea
+.eggs
