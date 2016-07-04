@@ -68,7 +68,7 @@ class WebVTTFile(UserList, object):
         All arguments are optional, and should be coercible to WebVTTTime
         object.
 
-        It reduce the set of subtitles to those that match match given time
+        It reduces the set of subtitles to those that match match given time
         constraints.
 
         The returned set is a clone, but still contains references to original
@@ -90,6 +90,7 @@ class WebVTTFile(UserList, object):
             clone.data = (i for i in clone.data if i.end > ends_after)
 
         clone.data = list(clone.data)
+
         return clone
 
     def at(self, timestamp=None, **kwargs):
@@ -249,7 +250,7 @@ class WebVTTFile(UserList, object):
         self.write_into(save_file, eol=eol)
         save_file.close()
 
-    def write_into(self, output_file, eol=None):
+    def write_into(self, output_file, eol=None, encoding=None):
         """
         write_into(output_file [, eol])
 
@@ -273,6 +274,7 @@ class WebVTTFile(UserList, object):
             # which already contain a trailing eol though.
             if not string_repr.endswith(2 * output_eol):
                 output_file.write(output_eol)
+                
 
     def _check_valid_len(self):
         if len(self) < 1:

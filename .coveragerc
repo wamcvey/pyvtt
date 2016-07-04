@@ -2,4 +2,6 @@
 omit =
     */python?.?/*
     */site-packages/nose/*
-
+    */System/Library/*
+    */setup.py
+    */tests/*

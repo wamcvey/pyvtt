@@ -96,7 +96,8 @@ class WebVTTItem(ComparableMixin):
     def from_lines(cls, lines):
         if len(lines) < 2:
             raise InvalidItem()
-        lines = [l.rstrip() for l in lines]
+        lines = [l.rstrip("\n\r") for l in lines]       # All cases are considered: '\n', '\r\n', '\r'
+        lines[0] = lines[0].rstrip()
         index = None
         if cls.TIMESTAMP_SEPARATOR not in lines[0]:
             index = lines.pop(0)
