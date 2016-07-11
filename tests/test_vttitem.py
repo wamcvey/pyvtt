@@ -101,6 +101,14 @@ class TestTagRemoval(unittest.TestCase):
         self.assertEqual(self.item.text_without_tags,'Bold, italic, underlined' + \
                 '\nred text, one, two, three.')
 
+    def test_bracket_tag(self):
+        self.item.text = "[b]Hello world ![/b]"
+        self.assertEqual(self.item.text_without_brackets, 'Hello world !')
+
+    def test_key_tag(self):
+        self.item.text = "{b}Hello world !{/b}"
+        self.assertEqual(self.item.text_without_keys, 'Hello world !')
+
 
 class TestShifting(unittest.TestCase):
 
