@@ -1,10 +1,11 @@
 language: python
+cache: pip
 python:
   - "2.7"
-  - "3.5"
 install:
-  - pip install -r test-requirements.txt --use-mirrors --upgrade
-  - pip install coveralls --use-mirrors
-script: nosetests --with-coverage --cover-package=pyvtt
+  - pip install -r test-requirements.txt --upgrade
+  - pip install coveralls
+script:
+  - nosetests -vs --with-coverage --cover-erase --cover-package=pyvtt
 after_success:
   coveralls
