@@ -38,11 +38,19 @@ class WebVTTItem(ComparableMixin):
 
     @property
     def text_without_tags(self):
-        return re.compile(r'<[^>]*?>').sub('', self.text)
+        return self._text_tag_cleaner('<', '>')
+
+    @property
+    def text_without_brackets(self):
+        return self._text_tag_cleaner('\[', '\]')
 
     @property
     def text_without_keys(self):
-        return re.compile(r'{[^>]*?}').sub('', self.text)
+        return self._text_tag_cleaner('{', '}')
+
+    def _text_tag_cleaner(self, before_delimiter, after_delimiter):
+        return re.compile(r"{0}[^>]*?{1}".format(
+            before_delimiter, after_delimiter)).sub('', self.text)
 
     @property
     def text_without_strange_chars(self):

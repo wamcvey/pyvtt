@@ -137,7 +137,7 @@ class WebVTTFile(UserList, object):
         for index, item in enumerate(self):
             item.index = index + 1
 
-    def clean_text(self, tags=False, keys=False,
+    def clean_text(self, tags=False, brackets=False, keys=False,
                    strange=False, trailing=False):
         """
             clean_text()
@@ -147,6 +147,8 @@ class WebVTTFile(UserList, object):
         for item in self:
             if tags:
                 item.text = item.text_without_tags
+            if brackets:
+                item.text = item.text_without_brackets
             if keys:
                 item.text = item.text_without_keys
             if strange:
