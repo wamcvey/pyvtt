@@ -109,6 +109,12 @@ class TestTagRemoval(unittest.TestCase):
         self.item.text = "{b}Hello world !{/b}"
         self.assertEqual(self.item.text_without_keys, 'Hello world !')
 
+    def test_replacements(self):
+        self.item.text = "P & G, A + B"
+        self.assertEqual(
+            self.item.text_with_replacements({'&': 'and', '+': 'plus'}),
+            'P and G, A plus B')
+
 
 class TestShifting(unittest.TestCase):
 

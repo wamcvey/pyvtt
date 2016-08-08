@@ -8,7 +8,6 @@ from pyvtt.vttexc import InvalidFile
 import os
 import sys
 import codecs
-import io
 
 import unittest
 import random
@@ -80,6 +79,7 @@ class TestCompareWithReference(unittest.TestCase):
         self.test_strange_chars_path = os.path.join(self.static_path, 'test_strange_chars.vtt')
         self.test_trailings_path = os.path.join(self.static_path, 'test_trailings.vtt')
         self.test_duration_path = os.path.join(self.static_path, 'test_duration.vtt')
+        self.test_replacements_path = os.path.join(self.static_path, 'test_replacements.vtt')
         self.vtt_file_ref = pyvtt.open(self.ref_path, encoding='utf_8')                 # Reference file (clean, no tags/keys/strangechars)
 
     def test_compare_tags_with_ref(self):
@@ -102,6 +102,13 @@ class TestCompareWithReference(unittest.TestCase):
         vtt_file_ref2 = pyvtt.open(ref_path2, encoding='utf_8')                         # Reference file (clean, no whitespaces).
         vtt_file_ut = pyvtt.open(self.test_trailings_path, encoding='utf_8')
         vtt_file_ut.clean_text(tags=False, keys=False, strange=False, trailing=True)    # Only trailing removal (whitespaces at end(beginning) is enabled. 
+        self.assertEqual(vtt_file_ref2.text, vtt_file_ut.text)
+
+    def test_compare_replacements_with_ref(self):
+        ref_path2 = os.path.join(self.static_path, 'ref_replacements.vtt')
+        vtt_file_ref2 = pyvtt.open(ref_path2, encoding='utf_8')                         # Reference file (clean, no whitespaces).
+        vtt_file_ut = pyvtt.open(self.test_replacements_path, encoding='utf_8')
+        vtt_file_ut.apply_replacements(replacements={'&':'and', '+': 'plus'})           # Only & -> and replacement
         self.assertEqual(vtt_file_ref2.text, vtt_file_ut.text)
 
     def test_compare_shift_with_ref(self):

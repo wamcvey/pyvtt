@@ -157,6 +157,15 @@ class WebVTTFile(UserList, object):
             if trailing:
                 item.text = item.text_without_trailing_spaces
 
+    def apply_replacements(self, replacements):
+        """
+            Apply replacements inside item's text
+            :param replacements: Map with the replaced/replacement tuples
+        """
+        if replacements:
+            for item in self:
+                item.text = item.text_with_replacements(replacements)
+
     @property
     def text(self):
         return '\n'.join(i.text for i in self)

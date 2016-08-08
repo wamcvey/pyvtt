@@ -73,6 +73,11 @@ class WebVTTItem(ComparableMixin):
         except ZeroDivisionError:
             return 0.0
 
+    def text_with_replacements(self, replacements_map={}):
+        for replaced, replacement in replacements_map.iteritems():
+            self.text = self.text.replace(replaced, replacement)
+        return self.text
+
     def __str__(self):
         position = ' %s' % self.position if self.position.strip() else ''
         return self.ITEM_PATTERN % (self.start, self.end,
