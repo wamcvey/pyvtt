@@ -53,15 +53,6 @@ class WebVTTItem(ComparableMixin):
             before_delimiter, after_delimiter)).sub('', self.text)
 
     @property
-    def text_without_strange_chars(self):
-        for c in ["\\i1", "\\i0", "\\b1", "\\b0", "\\b<weight>", "\\u1", "\\u0",
-                  "\\s1", "\\s0", "\\bord<size>", "\\xbord<size>",
-                  "\\ybord<size>", "\\shad<depth>", "\\xshad<depth>",
-                  "\\yshad<depth>"]:
-            self.text = self.text.replace(c, '')
-        return self.text
-
-    @property
     def text_without_trailing_spaces(self):
         return self.text.strip()
 
