@@ -138,7 +138,7 @@ class WebVTTFile(UserList, object):
             item.index = index + 1
 
     def clean_text(self, tags=False, brackets=False, keys=False,
-                   strange=False, trailing=False):
+                   trailing=False):
         """
             clean_text()
 
@@ -151,8 +151,6 @@ class WebVTTFile(UserList, object):
                 item.text = item.text_without_brackets
             if keys:
                 item.text = item.text_without_keys
-            if strange:
-                item.text = item.text_without_strange_chars
             # SUGGESTION: call always last the trailing spaces cleanup
             if trailing:
                 item.text = item.text_without_trailing_spaces
@@ -285,7 +283,6 @@ class WebVTTFile(UserList, object):
             # which already contain a trailing eol though.
             if not string_repr.endswith(2 * output_eol):
                 output_file.write(output_eol)
-                
 
     def _check_valid_len(self):
         if len(self) < 1:
