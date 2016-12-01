@@ -196,6 +196,16 @@ class TestSerialization(unittest.TestCase):
                           bytes(open(overwrite_target_path, 'rb').read()))
 
         os.remove(overwrite_target_path)
+        
+    def test_save_with_indexes(self):
+        file = pyvtt.open(os.path.join(self.static_path, 'no-indexes.srt'))
+        file.clean_indexes()
+        file_with_indexes = os.path.join(file_path, 'tests', 'vtt_test', 'file_with_indexes.vtt')
+        file_with_indexes_target_path = os.path.join(file_path, 'tests', 'vtt_test', 'file_with_indexes_target.vtt')
+        file.save(file_with_indexes_target_path, include_indexes=True)
+        self.assertEqual(bytes(open(file_with_indexes, 'rb').read()),
+                          bytes(open(file_with_indexes_target_path, 'rb').read()))
+        os.remove(file_with_indexes_target_path)
 
     def test_eol_convertion(self):
 
