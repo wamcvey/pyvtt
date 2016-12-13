@@ -5,12 +5,13 @@ import sys
 import unittest
 import codecs
 
-file_path = os.path.join(os.path.dirname(__file__), '..')
-sys.path.insert(0, os.path.abspath(file_path))
-
 from pyvtt import WebVTTItem, WebVTTTime, InvalidItem
 from pyvtt.compat import basestring
 from pyvtt.compat import str
+
+
+file_path = os.path.join(os.path.dirname(__file__), '..')
+sys.path.insert(0, os.path.abspath(file_path))
 
 
 class TestAttributes(unittest.TestCase):
@@ -61,14 +62,14 @@ class TestCPS(unittest.TestCase):
         self.assertEqual(self.item.characters_per_second, 1.6)
 
     def test_zero_duration(self):
-        self.item.start.shift(seconds = 20)
+        self.item.start.shift(seconds=20)
         self.assertEqual(self.item.characters_per_second, 0.0)
 
     def test_tags(self):
-	    self.item.text = '<b>bold</b>, <i>italic</i>, <u>underlined</u>\n' + \
-	    '<font color="#ff0000">red text</font>' + \
-	    ', <b>one,<i> two,<u> three</u></i></b>'
-	    self.assertEqual(self.item.characters_per_second, 2.45)
+        self.item.text = '<b>bold</b>, <i>italic</i>, <u>underlined</u>\n' + \
+                         '<font color="#ff0000">red text</font>' + \
+                         ', <b>one,<i> two,<u> three</u></i></b>'
+        self.assertEqual(self.item.characters_per_second, 2.45)
 
 
 class TestTagRemoval(unittest.TestCase):
@@ -80,26 +81,35 @@ class TestTagRemoval(unittest.TestCase):
 
     def test_italics_tag(self):
         self.item.text = "<i>Hello world !</i>"
-        self.assertEqual(self.item.text_without_tags,'Hello world !')
-        
+        self.assertEqual(self.item.text_without_tags, 'Hello world !')
+
     def test_bold_tag(self):
         self.item.text = "<b>Hello world !</b>"
-        self.assertEqual(self.item.text_without_tags,'Hello world !')
+        self.assertEqual(self.item.text_without_tags, 'Hello world !')
 
     def test_underline_tag(self):
         self.item.text = "<u>Hello world !</u>"
-        self.assertEqual(self.item.text_without_tags,'Hello world !')
+        self.assertEqual(self.item.text_without_tags, 'Hello world !')
 
     def test_color_tag(self):
         self.item.text = '<font color="#ff0000">Hello world !</font>'
-        self.assertEqual(self.item.text_without_tags,'Hello world !')
+        self.assertEqual(self.item.text_without_tags, 'Hello world !')
+
+    def test_tag_as_text(self):
+        self.item.text = '<This is not a tag>'
+        self.assertEqual(self.item.text_without_tags, 'This is not a tag')
+
+    def test_split_tag_as_text(self):
+        self.item.text = '<This is\n not a tag>'
+        self.assertEqual(self.item.text_without_tags, 'This is\n not a tag')
 
     def test_all_tags(self):
         self.item.text = '<b>Bold</b>, <i>italic</i>, <u>underlined</u>\n' + \
-        '<font color="#ff0000">red text</font>' + \
-        ', <b>one,<i> two,<u> three</u></i></b>.'
-        self.assertEqual(self.item.text_without_tags,'Bold, italic, underlined' + \
-                '\nred text, one, two, three.')
+                         '<font color="#ff0000">red text</font>' + \
+                         ', <b>one,<i> two,<u> three</u></i></b>.'
+        self.assertEqual(
+            self.item.text_without_tags,
+            'Bold, italic, underlined\nred text, one, two, three.')
 
     def test_bracket_tag(self):
         self.item.text = "[b]Hello world ![/b]"
@@ -166,14 +176,14 @@ class TestSerialAndParsing(unittest.TestCase):
         self.string = '1\n00:01:00.000 --> 00:01:20.000\nHello world !\n'
         self.bad_string = 'foobar'
         self.coordinates = ('1\n00:01:00.000 --> 00:01:20.000 X1:000 X2:000 '
-                                'Y1:050 Y2:100\nHello world !\n')
+                            'Y1:050 Y2:100\nHello world !\n')
         self.vtt = ('00:01:00.000 --> 00:01:20.000 D:vertical A:start '
-                                'L:12%\nHello world !\n')
+                    'L:12%\nHello world !\n')
         self.string_index = 'foo\n00:01:00.000 --> 00:01:20.000\nHello !\n'
         self.dots = '1\n00:01:00.000 --> 00:01:20.000\nHello world !\n'
         self.no_index = '00:01:00,000 --> 00:01:20,000\nHello world !\n'
         self.junk_after_timestamp = ('1\n00:01:00,000 --> 00:01:20,000?\n'
-                                'Hello world !\n')
+                                     'Hello world !\n')
 
     def test_serialization(self):
         self.assertEqual(str(self.item), self.string[2:])
@@ -205,7 +215,8 @@ class TestSerialAndParsing(unittest.TestCase):
 
     # Bug reported in https://github.com/byroot/pysrt/issues/16
     def test_paring_error(self):
-        self.assertRaises(InvalidItem, WebVTTItem.from_string, '1\n'
+        self.assertRaises(
+            InvalidItem, WebVTTItem.from_string, '1\n'
             '00:01:00,000 -> 00:01:20,000 X1:000 X2:000 '
             'Y1:050 Y2:100\nHello world !\n')
 
@@ -224,26 +235,27 @@ class TestSerialAndParsing(unittest.TestCase):
         self.assertEquals(item, self.item)
 
     def test_is_unicode(self):
-        # Defining non_unicode encodings list as defined in 
+        # Defining non_unicode encodings list as defined in
         # https://docs.python.org/2/library/codecs.html#standard-encodings
-        non_unicode_encodings = ['big5', 'big5hkscs', 
-                                 'cp1250', 'cp1251', 'cp1252', 'cp1253', 
-                                 'cp1254', 'cp1255', 'cp1256', 'cp1257', 'cp1258', 
-                                 'euc_jp', 'euc_jis_2004', 'euc_jisx0213', 'euc_kr', 
-                                 'gb2312', 'gbk', 'gb18030', 'hz', 'iso2022_jp', 
-                                 'iso2022_jp_1', 'iso2022_jp_2', 'iso2022_jp_2004', 
-                                 'iso2022_jp_3', 'iso2022_jp_ext', 'iso2022_kr', 
-                                 'latin_1', 'iso8859_2', 'iso8859_3', 'iso8859_4', 
-                                 'iso8859_5', 'iso8859_6', 'iso8859_7', 'iso8859_8', 
-                                 'iso8859_9', 'iso8859_10', 'iso8859_11', 'iso8859_13', 
-                                 'iso8859_13', 'iso8859_14', 'iso8859_15', 'iso8859_16', 
-                                 'johab', 'koi8_r', 'koi8_u', 'mac_cyrillic', 'mac_greek', 
-                                 'mac_iceland', 'mac_latin2', 'mac_roman', 'mac_turkish', 
-                                 'ptcp154', 'shift_jis', 'shift_jis_2004', 'shift_jisx0213']
+        non_unicode_encodings = [
+            'big5', 'big5hkscs', 'cp1250', 'cp1251', 'cp1252', 'cp1253',
+            'cp1254', 'cp1255', 'cp1256', 'cp1257', 'cp1258',
+            'euc_jp', 'euc_jis_2004', 'euc_jisx0213', 'euc_kr',
+            'gb2312', 'gbk', 'gb18030', 'hz', 'iso2022_jp',
+            'iso2022_jp_1', 'iso2022_jp_2', 'iso2022_jp_2004',
+            'iso2022_jp_3', 'iso2022_jp_ext', 'iso2022_kr',
+            'latin_1', 'iso8859_2', 'iso8859_3', 'iso8859_4',
+            'iso8859_5', 'iso8859_6', 'iso8859_7', 'iso8859_8',
+            'iso8859_9', 'iso8859_10', 'iso8859_11', 'iso8859_13',
+            'iso8859_13', 'iso8859_14', 'iso8859_15', 'iso8859_16',
+            'johab', 'koi8_r', 'koi8_u', 'mac_cyrillic', 'mac_greek',
+            'mac_iceland', 'mac_latin2', 'mac_roman', 'mac_turkish',
+            'ptcp154', 'shift_jis', 'shift_jis_2004', 'shift_jisx0213']
         for enc in non_unicode_encodings:
             non_unicode = codecs.encode('non_unicode\n', enc)
             self.no_unicode_item = WebVTTItem(1, text=non_unicode)
-            self.assertRaises(NotImplementedError, WebVTTItem.__str__, self.no_unicode_item)
+            self.assertRaises(NotImplementedError, WebVTTItem.__str__,
+                              self.no_unicode_item)
 
 if __name__ == '__main__':
     unittest.main()
