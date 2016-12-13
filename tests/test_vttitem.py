@@ -122,7 +122,7 @@ class TestTagRemoval(unittest.TestCase):
     def test_replacements(self):
         self.item.text = "P & G, A + B"
         self.assertEqual(
-            self.item.text_with_replacements({'&': 'and', '+': 'plus'}),
+            self.item.text_with_replacements([('&', 'and'), ('+', 'plus')]),
             'P and G, A plus B')
 
 
