@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 WebVTT's subtitle parser
 """
@@ -23,8 +22,9 @@ class WebVTTItem(ComparableMixin):
 
     def __init__(self, index=0, start=None, end=None, text='', position=''):
         try:
+            # try to cast as int, but it's not mandatory
             self.index = int(index)
-        except (TypeError, ValueError):  # try to cast as int, but it's not mandatory
+        except (TypeError, ValueError):
             self.index = index
 
         self.start = WebVTTTime.coerce(start or 0)
@@ -49,8 +49,22 @@ class WebVTTItem(ComparableMixin):
         return self._text_tag_cleaner('{', '}')
 
     def _text_tag_cleaner(self, before_delimiter, after_delimiter):
+        def _line_tag_cleaner(line):
+            if (line.startswith(before_delimiter) and
+                line.count(before_delimiter) == 1 and
+                    (line.count(after_delimiter) == 0 or
+                     line.endswith(after_delimiter))):
+                line = line[1:]
+            if (line.endswith(after_delimiter) and
+                    line.count(after_delimiter) == 1 and
+                    line.count(before_delimiter) == 0):
+                line = line[:-1]
+            return line
+
+        # Pre process line by line to avoid some ugly corner cases
+        text = '\n'.join([_line_tag_cleaner(i) for i in self.text.split('\n')])
         return re.compile(r"{0}[^>]*?{1}".format(
-            before_delimiter, after_delimiter)).sub('', self.text)
+            before_delimiter, after_delimiter)).sub('', text)
 
     @property
     def text_without_trailing_spaces(self):
@@ -100,7 +114,8 @@ class WebVTTItem(ComparableMixin):
     def from_lines(cls, lines):
         if len(lines) < 2:
             raise InvalidItem()
-        lines = [l.rstrip("\n\r") for l in lines]       # All cases are considered: '\n', '\r\n', '\r'
+        # All cases are considered: '\n', '\r\n', '\r'
+        lines = [l.rstrip("\n\r") for l in lines]
         lines[0] = lines[0].rstrip()
         index = None
         if cls.TIMESTAMP_SEPARATOR not in lines[0]:
