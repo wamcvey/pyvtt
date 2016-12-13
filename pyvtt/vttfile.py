@@ -244,22 +244,23 @@ class WebVTTFile(UserList, object):
                         error.args += (''.join(source), )
                         cls._handle_error(error, error_handling, index)
 
-    def save(self, path=None, encoding=None, eol=None):
+    def save(self, path=None, encoding=None, eol=None, include_indexes=False):
         """
         save([path][, encoding][, eol])
 
         Use initial path if no other provided.
         Use initial encoding if no other provided.
         Use initial eol if no other provided.
+        Set include_indexes to True to include the cue indexes.
         """
         path = path or self.path
         encoding = encoding or self.encoding
 
         save_file = codecs.open(path, 'w+', encoding=encoding)
-        self.write_into(save_file, eol=eol)
+        self.write_into(save_file, eol=eol, include_indexes=include_indexes)
         save_file.close()
 
-    def write_into(self, output_file, eol=None, encoding=None):
+    def write_into(self, output_file, eol=None, encoding=None, include_indexes=False):
         """
         write_into(output_file [, eol])
 
@@ -267,6 +268,8 @@ class WebVTTFile(UserList, object):
 
         `output_file` -> Any instance that respond to `write()`, typically a
         file object
+
+        If include_indexes is True the cue indexes will be included in the file.
         """
         self._check_valid_len()
         output_eol = eol or self.eol
@@ -276,6 +279,8 @@ class WebVTTFile(UserList, object):
             string_repr = str(item)
             if output_eol != '\n':
                 string_repr = string_repr.replace('\n', output_eol)
+            if include_indexes:
+                output_file.write(str(item.index) + output_eol)
             output_file.write(string_repr)
             # Only add trailing eol if it's not already present.
             # It was kept in the WebVTTItem's text before but it really
