@@ -9,6 +9,10 @@ from pyvtt.compat import str, is_py2
 import re
 
 
+# Workaround to compare regex pattern object type
+PATTERN_TYPE = type(re.compile(''))
+
+
 class WebVTTItem(ComparableMixin):
     """
     WebVTTItem(index, start, end, text, position)
@@ -78,9 +82,12 @@ class WebVTTItem(ComparableMixin):
         except ZeroDivisionError:
             return 0.0
 
-    def text_with_replacements(self, replacements_map={}):
-        for replaced, replacement in replacements_map.iteritems():
-            self.text = self.text.replace(replaced, replacement)
+    def text_with_replacements(self, replacements=[]):
+        for replaced, replacement in replacements:
+            if isinstance(replaced, PATTERN_TYPE):
+                self.text = replaced.sub(replacement, self.text)
+            else:
+                self.text = self.text.replace(replaced, replacement)
         return self.text
 
     def __str__(self):

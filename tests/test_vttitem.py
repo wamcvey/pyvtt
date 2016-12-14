@@ -4,6 +4,7 @@ import os
 import sys
 import unittest
 import codecs
+import re
 
 from pyvtt import WebVTTItem, WebVTTTime, InvalidItem
 from pyvtt.compat import basestring
@@ -122,8 +123,14 @@ class TestTagRemoval(unittest.TestCase):
     def test_replacements(self):
         self.item.text = "P & G, A + B"
         self.assertEqual(
-            self.item.text_with_replacements({'&': 'and', '+': 'plus'}),
+            self.item.text_with_replacements([('&', 'and'), ('+', 'plus')]),
             'P and G, A plus B')
+
+    def test_regex_eplacements(self):
+        self.item.text = "\\tag21 This is a test!"
+        self.assertEqual(
+            self.item.text_with_replacements([(re.compile(r'\\tag\d+ '), '')]),
+            'This is a test!')
 
 
 class TestShifting(unittest.TestCase):
