@@ -88,6 +88,8 @@ class WebVTTItem(ComparableMixin):
                 self.text = replaced.sub(replacement, self.text)
             else:
                 self.text = self.text.replace(replaced, replacement)
+        # Avoid trailing spaces or empty lines after all replacements
+        self.text = self.text.strip()
         return self.text
 
     def __str__(self):
