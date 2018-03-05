@@ -195,8 +195,8 @@ class TestSerialization(unittest.TestCase):
 
     def test_compare_from_string_and_from_path(self):
         unicode_content = codecs.open(self.utf8_path, encoding='utf_8').read()
-        iterator = zip(pyvtt.open(self.utf8_path),
-                       pyvtt.from_string(unicode_content))
+        iterator = list(zip(pyvtt.open(self.utf8_path),
+                       pyvtt.from_string(unicode_content)))
         for file_item, string_item in iterator:
             self.assertEqual(str(file_item), str(string_item))
 
@@ -260,7 +260,7 @@ class TestSerialization(unittest.TestCase):
             input_eol = open(self.temp_eol_path, 'wb')
             input_eol.write(
                 "00:01:00,000 --> 00:02:00,000"
-                " {0} TestEOLConvertion + {0}".format(eols))
+                " {0} TestEOLConvertion + {0}".format(eols).encode())
             input_eol.close()
 
             input_file = open(self.temp_eol_path, 'rU', encoding=enc)
@@ -289,7 +289,7 @@ class TestSerialization(unittest.TestCase):
             input_eol = open(self.temp_eol_path, 'wb')
             input_eol.write(
                 "00:01:00,000 --> 00:02:00,000"
-                " {0} TestEOLPreservation + {0}".format(eols))
+                " {0} TestEOLPreservation + {0}".format(eols).encode())
             input_eol.close()
 
             input_file = open(self.temp_eol_path, 'rU', encoding=enc)
@@ -319,8 +319,8 @@ class TestSlice(unittest.TestCase):
         self.assertEqual(len(self.file.slice(starts_after=(1, 2, 3, 4))), 459)
 
     def test_at(self):
-        self.assertEquals(len(self.file.at((0, 0, 31, 0))), 1)
-        self.assertEquals(len(self.file.at(seconds=31)), 1)
+        self.assertEqual(len(self.file.at((0, 0, 31, 0))), 1)
+        self.assertEqual(len(self.file.at(seconds=31)), 1)
 
 
 class TestShifting(unittest.TestCase):
@@ -339,14 +339,14 @@ class TestText(unittest.TestCase):
         vtt_file = WebVTTFile([
             WebVTTItem(1, {'seconds': 1}, {'seconds': 2}, 'Hello')
         ])
-        self.assertEquals(vtt_file.text, 'Hello')
+        self.assertEqual(vtt_file.text, 'Hello')
 
     def test_multiple_item(self):
         vtt_file = WebVTTFile([
             WebVTTItem(1, {'seconds': 0}, {'seconds': 3}, 'Hello'),
             WebVTTItem(1, {'seconds': 1}, {'seconds': 2}, 'World !')
         ])
-        self.assertEquals(vtt_file.text, 'Hello\nWorld !')
+        self.assertEqual(vtt_file.text, 'Hello\nWorld !')
 
 
 class TestDuckTyping(unittest.TestCase):
@@ -454,7 +454,7 @@ class TestIntegration(unittest.TestCase):
 
     def test_missing_indexes(self):
         items = pyvtt.open(os.path.join(self.base_path, 'no-indexes.srt'))
-        self.assertEquals(len(items), 7)
+        self.assertEqual(len(items), 7)
 
 if __name__ == '__main__':
     unittest.main()

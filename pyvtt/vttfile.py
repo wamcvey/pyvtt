@@ -349,5 +349,5 @@ class WebVTTFile(UserList, object):
         if error_handling == cls.ERROR_LOG:
             name = type(error).__name__
             sys.stderr.write('PyVTT-%s(line %s): \n' % (name, index))
-            sys.stderr.write(error.args[0].encode('ascii', 'replace'))
+            sys.stderr.write(error.args[0])
             sys.stderr.write('\n')

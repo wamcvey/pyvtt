@@ -40,6 +40,6 @@ setup(name='pyvtt',
           "Programming Language :: Python",
           "Topic :: Multimedia :: Video",
           "Topic :: Software Development :: Libraries",
-          "Topic :: Text Processing :: Markup",
+          "Topic :: Text Processing :: Markup"
       ]
 )

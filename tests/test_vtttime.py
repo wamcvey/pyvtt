@@ -85,7 +85,8 @@ class TestTimeParsing(unittest.TestCase):
 
     def test_negative_serialization(self):
         self.assertEqual('00:00:00.000', str(WebVTTTime(-1, 2, 3, 4)))
-        self.assertEqual('00:00:00.000', str(WebVTTTime(-sys.maxint, 2, 3, 4)))
+        self.assertEqual('00:00:00.000',
+                         str(WebVTTTime(-sys.maxsize, 2, 3, 4)))
         self.assertEqual('00:00:00.000', str(WebVTTTime(0, -2, 3, 4)))
         self.assertEqual('00:00:00.000', str(WebVTTTime(0, 0, -3, 4)))
         self.assertEqual('00:00:00.000', str(WebVTTTime(0, 0, 0, -4)))
@@ -95,13 +96,13 @@ class TestTimeParsing(unittest.TestCase):
         self.assertRaises(InvalidTimeString, WebVTTTime.from_string, 'test')
 
     def test_invalid_int(self):
-        random_long = long(random.choice(range(0,10000000)))
+        random_long = int(random.choice(list(range(0,10000000))))
         self.assertRaises(ValueError, lambda: WebVTTTime.parse_int('test'))             # String
         self.assertRaises(ValueError, lambda: WebVTTTime.parse_int(bin(42)))            # Binary
         self.assertRaises(ValueError, lambda: WebVTTTime.parse_int('t'))                # Char
         self.assertRaises(TypeError, WebVTTTime.parse_int)                              # None
         self.assertRaises(TypeError, WebVTTTime.parse_int(None))                        # None
-        self.assertRaises(TypeError, WebVTTTime.parse_int(range(10)))                   # List
+        self.assertRaises(TypeError, WebVTTTime.parse_int(list(range(10))))                   # List
         self.assertRaises(TypeError, WebVTTTime.parse_int((1,1)))                       # Tuple
         self.assertRaises(TypeError, WebVTTTime.parse_int(True))                        # Boolean
         self.assertRaises(TypeError, WebVTTTime.parse_int(random.uniform(1,100)))       # Float    

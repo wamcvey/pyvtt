@@ -7,8 +7,7 @@ import codecs
 import re
 
 from pyvtt import WebVTTItem, WebVTTTime, InvalidItem
-from pyvtt.compat import basestring
-from pyvtt.compat import str
+from pyvtt.compat import str, basestring, is_py3
 
 
 file_path = os.path.join(os.path.dirname(__file__), '..')
@@ -229,19 +228,22 @@ class TestSerialAndParsing(unittest.TestCase):
 
     def test_string_index(self):
         item = WebVTTItem.from_string(self.string_index)
-        self.assertEquals(item.index, 'foo')
-        self.assertEquals(item.text, 'Hello !')
+        self.assertEqual(item.index, 'foo')
+        self.assertEqual(item.text, 'Hello !')
 
     def test_no_index(self):
         item = WebVTTItem.from_string(self.no_index)
-        self.assertEquals(item.index, None)
-        self.assertEquals(item.text, 'Hello world !')
+        self.assertEqual(item.index, None)
+        self.assertEqual(item.text, 'Hello world !')
 
     def test_junk_after_timestamp(self):
         item = WebVTTItem.from_string(self.junk_after_timestamp)
-        self.assertEquals(item, self.item)
+        self.assertEqual(item, self.item)
 
     def test_is_unicode(self):
+        # This tests makes no sense for Py3
+        if is_py3:
+            return
         # Defining non_unicode encodings list as defined in
         # https://docs.python.org/2/library/codecs.html#standard-encodings
         non_unicode_encodings = [
