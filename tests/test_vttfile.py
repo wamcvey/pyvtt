@@ -1,134 +1,131 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import pyvtt
-from pyvtt import WebVTTFile, WebVTTItem
+from codecs import open as copen
+from os import linesep, remove
+from os.path import abspath, dirname, join
+from random import randint, shuffle
+from sys import path
+from unittest import main, TestCase
+
+from pyvtt import (from_string, open as vttopen, Error as vttError, stream,
+                   WebVTTFile, WebVTTItem)
 from pyvtt.compat import str, open
 from pyvtt.vttexc import InvalidFile
 
-import os
-import sys
-import codecs
-
-import unittest
-import random
-
-file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.insert(0, os.path.abspath(file_path))
+file_path = join(dirname(__file__), '..')
+path.insert(0, abspath(file_path))
 
 
-class TestOpen(unittest.TestCase):
+class TestOpen(TestCase):
 
     def setUp(self):
-        self.static_path = os.path.join(file_path, 'tests', 'static')
-        self.utf8_path = os.path.join(self.static_path, 'utf-8.vtt')
-        self.windows_path = os.path.join(self.static_path, 'windows-1252.srt')
-        self.invalid_path = os.path.join(self.static_path, 'invalid.srt')
+        self.static_path = join(file_path, 'tests', 'static')
+        self.utf8_path = join(self.static_path, 'utf-8.vtt')
+        self.windows_path = join(self.static_path, 'windows-1252.srt')
+        self.invalid_path = join(self.static_path, 'invalid.srt')
 
     def test_utf8(self):
-        self.assertEqual(len(pyvtt.open(self.utf8_path)), 1332)
-        self.assertEqual(pyvtt.open(self.utf8_path).encoding, 'utf_8')
-        self.assertRaises(UnicodeDecodeError, pyvtt.open,
-                          self.windows_path)
+        self.assertEqual(len(vttopen(self.utf8_path)), 1332)
+        self.assertEqual(vttopen(self.utf8_path).encoding, 'utf_8')
+        self.assertRaises(UnicodeDecodeError, vttopen, self.windows_path)
 
     def test_windows1252(self):
-        vtt_file = pyvtt.open(self.windows_path, encoding='windows-1252')
+        vtt_file = vttopen(self.windows_path, encoding='windows-1252')
         self.assertEqual(len(vtt_file), 1332)
         self.assertEqual(vtt_file.eol, '\r\n')
-        self.assertRaises(UnicodeDecodeError, pyvtt.open,
-                          self.utf8_path, encoding='ascii')
+        self.assertRaises(UnicodeDecodeError, vttopen, self.utf8_path, 
+                          encoding='ascii')
 
     def test_error_handling(self):
-        self.assertRaises(pyvtt.Error, pyvtt.open, self.invalid_path,
+        self.assertRaises(vttError, vttopen, self.invalid_path,
                           error_handling=WebVTTFile.ERROR_RAISE)
-        self.assertRaises(pyvtt.Error, pyvtt.open, self.invalid_path,
+        self.assertRaises(vttError, vttopen, self.invalid_path,
                           error_handling=WebVTTFile.ERROR_LOG)
 
 
-class TestFromString(unittest.TestCase):
+class TestFromString(TestCase):
 
     def setUp(self):
-        self.static_path = os.path.join(file_path, 'tests', 'static')
-        self.utf8_path = os.path.join(self.static_path, 'utf-8.vtt')
-        self.windows_path = os.path.join(self.static_path, 'windows-1252.srt')
-        self.invalid_path = os.path.join(self.static_path, 'invalid.srt')
-        self.temp_path = os.path.join(self.static_path, 'temp.srt')
+        self.static_path = join(file_path, 'tests', 'static')
+        self.utf8_path = join(self.static_path, 'utf-8.vtt')
+        self.windows_path = join(self.static_path, 'windows-1252.srt')
+        self.invalid_path = join(self.static_path, 'invalid.srt')
+        self.temp_path = join(self.static_path, 'temp.srt')
 
     def test_utf8(self):
-        unicode_content = codecs.open(self.utf8_path, encoding='utf_8').read()
-        self.assertEqual(len(pyvtt.from_string(unicode_content)), 1332)
+        unicode_content = copen(self.utf8_path, encoding='utf_8').read()
+        self.assertEqual(len(from_string(unicode_content)), 1332)
         self.assertRaises(UnicodeDecodeError, open(self.windows_path).read)
 
     def test_windows1252(self):
-        vtt_string = codecs.open(
-            self.windows_path, encoding='windows-1252').read()
-        vtt_file = pyvtt.from_string(
-            vtt_string, encoding='windows-1252', eol='\r\n')
+        vtt_string = copen(self.windows_path, encoding='windows-1252').read()
+        vtt_file = from_string(vtt_string, encoding='windows-1252', eol='\r\n')
         self.assertEqual(len(vtt_file), 1332)
         self.assertEqual(vtt_file.eol, '\r\n')
-        self.assertRaises(UnicodeDecodeError, pyvtt.open,
+        self.assertRaises(UnicodeDecodeError, vttopen,
                           self.utf8_path, encoding='ascii')
 
 
-class TestCompareWithReference(unittest.TestCase):
+class TestCompareWithReference(TestCase):
 
     def setUp(self):
-        self.static_path = os.path.join(file_path, 'tests', 'vtt_test')
-        self.ref_path = os.path.join(self.static_path, 'ref.vtt')
-        self.ref_dur_shifted_path = os.path.join(
+        self.static_path = join(file_path, 'tests', 'vtt_test')
+        self.ref_path = join(self.static_path, 'ref.vtt')
+        self.ref_dur_shifted_path = join(
             self.static_path, 'ref_duration_shifted.vtt')
-        self.ref_dur_sliced_path = os.path.join(
+        self.ref_dur_sliced_path = join(
             self.static_path, 'ref_duration_sliced.vtt')
-        self.test_tags_path = os.path.join(self.static_path, 'test_tags.vtt')
-        self.test_keys_path = os.path.join(self.static_path, 'test_keys.vtt')
-        self.test_trailings_path = os.path.join(
+        self.test_tags_path = join(self.static_path, 'test_tags.vtt')
+        self.test_keys_path = join(self.static_path, 'test_keys.vtt')
+        self.test_trailings_path = join(
             self.static_path, 'test_trailings.vtt')
-        self.test_duration_path = os.path.join(
+        self.test_duration_path = join(
             self.static_path, 'test_duration.vtt')
-        self.test_replacements_path = os.path.join(
+        self.test_replacements_path = join(
             self.static_path, 'test_replacements.vtt')
         # Reference file (clean, no tags/keys)
-        self.vtt_file_ref = pyvtt.open(self.ref_path, encoding='utf_8')
+        self.vtt_file_ref = vttopen(self.ref_path, encoding='utf_8')
 
     def test_compare_tags_with_ref(self):
-        vtt_file_ut = pyvtt.open(self.test_tags_path, encoding='utf_8')
+        vtt_file_ut = vttopen(self.test_tags_path, encoding='utf_8')
         # Only tags removal is enabled.
         vtt_file_ut.clean_text(tags=True, keys=False, trailing=False)
         self.assertEqual(self.vtt_file_ref.text, vtt_file_ut.text)
 
     def test_compare_keys_with_ref(self):
-        vtt_file_ut = pyvtt.open(self.test_keys_path, encoding='utf_8')
+        vtt_file_ut = vttopen(self.test_keys_path, encoding='utf_8')
         # Only keys removal is enabled.
         vtt_file_ut.clean_text(tags=False, keys=True, trailing=False)
         self.assertEqual(self.vtt_file_ref.text, vtt_file_ut.text)
 
     def test_compare_trailings_with_ref(self):
-        ref_path2 = os.path.join(self.static_path, 'ref_notrailings.vtt')
+        ref_path2 = join(self.static_path, 'ref_notrailings.vtt')
         # Reference file (clean, no whitespaces).
-        vtt_file_ref2 = pyvtt.open(ref_path2, encoding='utf_8')
+        vtt_file_ref2 = vttopen(ref_path2, encoding='utf_8')
 
         # Only trailing removal (whitespaces at end(beginning) is enabled.
-        vtt_file_ut = pyvtt.open(self.test_trailings_path, encoding='utf_8')
+        vtt_file_ut = vttopen(self.test_trailings_path, encoding='utf_8')
         vtt_file_ut.clean_text(tags=False, keys=False, trailing=True)
         self.assertEqual(vtt_file_ref2.text, vtt_file_ut.text)
 
     def test_compare_replacements_with_ref(self):
-        ref_path2 = os.path.join(self.static_path, 'ref_replacements.vtt')
+        ref_path2 = join(self.static_path, 'ref_replacements.vtt')
         # Reference file (clean, no whitespaces).
-        vtt_file_ref2 = pyvtt.open(ref_path2, encoding='utf_8')
+        vtt_file_ref2 = vttopen(ref_path2, encoding='utf_8')
 
-        vtt_file_ut = pyvtt.open(self.test_replacements_path, encoding='utf_8')
+        vtt_file_ut = vttopen(self.test_replacements_path, encoding='utf_8')
         # Only & -> and replacement
         vtt_file_ut.apply_replacements(replacements=[('&', 'and'),
                                                      ('+', 'plus')])
         self.assertEqual(vtt_file_ref2.text, vtt_file_ut.text)
 
     def test_compare_shift_with_ref(self):
-        vtt_file_ref = pyvtt.open(self.ref_dur_shifted_path, encoding='utf_8')
-        vtt_file_ut1 = pyvtt.open(self.test_duration_path, encoding='utf_8')
-        vtt_file_ut2 = pyvtt.open(self.test_duration_path, encoding='utf_8')
-        ref_ratio_path = os.path.join(
+        vtt_file_ref = vttopen(self.ref_dur_shifted_path, encoding='utf_8')
+        vtt_file_ut1 = vttopen(self.test_duration_path, encoding='utf_8')
+        vtt_file_ut2 = vttopen(self.test_duration_path, encoding='utf_8')
+        ref_ratio_path = join(
             self.static_path, 'ref_duration_ratio.vtt')
-        vtt_file_ref_ratio = pyvtt.open(ref_ratio_path, encoding='utf_8')
+        vtt_file_ref_ratio = vttopen(ref_ratio_path, encoding='utf_8')
 
         # Shifted 5 hours, 5 minutes, 5 seconds, 500 milliseconds.
         vtt_file_ut1.shift(hours=5, minutes=5, seconds=5, milliseconds=500)
@@ -143,115 +140,115 @@ class TestCompareWithReference(unittest.TestCase):
         self.assertEqual(vtt_file_ut1, vtt_file_ref_ratio)
 
     def test_compare_slice_with_ref(self):
-        vtt_file_ref = pyvtt.open(self.ref_dur_sliced_path, encoding='utf_8')
-        vtt_file_source = pyvtt.open(self.test_duration_path, encoding='utf_8')
-        temp_file_path = os.path.join(self.static_path, 'temp_test.vtt')
+        vtt_file_ref = vttopen(self.ref_dur_sliced_path, encoding='utf_8')
+        vtt_file_source = vttopen(self.test_duration_path, encoding='utf_8')
+        temp_file_path = join(self.static_path, 'temp_test.vtt')
 
         vtt_file_ut = vtt_file_source.slice(starts_after={'minutes': 2})
         self.assertRaises(InvalidFile, vtt_file_ut.save, temp_file_path)
-        os.remove(temp_file_path)
+        remove(temp_file_path)
 
         vtt_file_ut = vtt_file_source.slice(
             starts_after={'seconds': 20}, ends_before={'seconds': 42})
         vtt_file_ut.save(temp_file_path, eol='\n', encoding='utf_8')
         self.assertEqual(vtt_file_ut, vtt_file_ref)
-        os.remove(temp_file_path)
+        remove(temp_file_path)
 
         vtt_file_ut = vtt_file_source.slice(
             starts_after={'seconds': -20}, ends_before={'seconds': -42})
         self.assertRaises(InvalidFile, vtt_file_ut.save, temp_file_path)
-        os.remove(temp_file_path)
+        remove(temp_file_path)
 
         # ends_before > ends_after
         vtt_file_ut = vtt_file_source.slice(
             ends_before={'seconds': 42}, ends_after={'seconds': 40})
 
         self.assertRaises(InvalidFile, vtt_file_ut.save, temp_file_path)
-        os.remove(temp_file_path)
+        remove(temp_file_path)
 
         # starts_before < starts_after
         vtt_file_ut = vtt_file_source.slice(
             starts_before={'seconds': 10}, starts_after={'seconds': 30})
 
         self.assertRaises(InvalidFile, vtt_file_ut.save, temp_file_path)
-        os.remove(temp_file_path)
+        remove(temp_file_path)
 
         # starts_after > ends_before
         vtt_file_ut = vtt_file_source.slice(
             starts_after={'seconds': 42}, ends_before={'seconds': 30})
 
         self.assertRaises(InvalidFile, vtt_file_ut.save, temp_file_path)
-        os.remove(temp_file_path)
+        remove(temp_file_path)
 
 
-class TestSerialization(unittest.TestCase):
+class TestSerialization(TestCase):
 
     def setUp(self):
-        self.static_path = os.path.join(file_path, 'tests', 'static')
-        self.utf8_path = os.path.join(self.static_path, 'utf-8.vtt')
-        self.windows_path = os.path.join(self.static_path, 'windows-1252.srt')
-        self.invalid_path = os.path.join(self.static_path, 'invalid.srt')
-        self.temp_path = os.path.join(self.static_path, 'temp.srt')
+        self.static_path = join(file_path, 'tests', 'static')
+        self.utf8_path = join(self.static_path, 'utf-8.vtt')
+        self.windows_path = join(self.static_path, 'windows-1252.srt')
+        self.invalid_path = join(self.static_path, 'invalid.srt')
+        self.temp_path = join(self.static_path, 'temp.srt')
 
     def test_compare_from_string_and_from_path(self):
-        unicode_content = codecs.open(self.utf8_path, encoding='utf_8').read()
-        iterator = list(zip(pyvtt.open(self.utf8_path),
-                       pyvtt.from_string(unicode_content)))
+        unicode_content = copen(self.utf8_path, encoding='utf_8').read()
+        iterator = list(zip(vttopen(self.utf8_path),
+                            from_string(unicode_content)))
         for file_item, string_item in iterator:
             self.assertEqual(str(file_item), str(string_item))
 
     def test_save_new_eol_and_encoding(self):
-        vtt_file = pyvtt.open(self.windows_path, encoding='windows-1252')
+        vtt_file = vttopen(self.windows_path, encoding='windows-1252')
         vtt_file.save(self.temp_path, eol='\n', encoding='utf-8')
         self.assertEqual(bytes(open(self.temp_path, 'rb').read()),
                          bytes(open(self.utf8_path, 'rb').read()))
-        os.remove(self.temp_path)
+        remove(self.temp_path)
 
     def test_save_empty_slice(self):
-        vtt_file = pyvtt.open(self.windows_path, encoding='windows-1252')
+        vtt_file = vttopen(self.windows_path, encoding='windows-1252')
         sliced_file = vtt_file.slice(starts_after=(0, 0, 0, 0),
                                      ends_before=(0, 0, 0, 0))
         self.assertEqual(len(sliced_file), 0)
         self.assertRaises(InvalidFile, sliced_file.save, self.temp_path)
 
     def test_save_overwrite(self):
-        overwrite_source_path1 = os.path.join(
+        overwrite_source_path1 = join(
             file_path, 'tests', 'vtt_test', 'overwrite_source1.vtt')
-        overwrite_source_path2 = os.path.join(
+        overwrite_source_path2 = join(
             file_path, 'tests', 'vtt_test', 'overwrite_source2.vtt')
-        overwrite_target_path = os.path.join(
+        overwrite_target_path = join(
             file_path, 'tests', 'vtt_test', 'overwrite_target.vtt')
 
-        vtt_file1 = pyvtt.open(overwrite_source_path1, encoding='utf-8')
+        vtt_file1 = vttopen(overwrite_source_path1, encoding='utf-8')
         vtt_file1.save(overwrite_target_path, eol=vtt_file1._eol,
                        encoding=vtt_file1.encoding)
         self.assertEqual(bytes(open(overwrite_source_path1, 'rb').read()),
                          bytes(open(overwrite_target_path, 'rb').read()))
 
-        vtt_file2 = pyvtt.open(overwrite_source_path2, encoding='utf-8')
+        vtt_file2 = vttopen(overwrite_source_path2, encoding='utf-8')
         vtt_file2.save(overwrite_target_path, eol=vtt_file2._eol,
                        encoding=vtt_file2.encoding)
         self.assertEqual(bytes(open(overwrite_source_path2, 'rb').read()),
                          bytes(open(overwrite_target_path, 'rb').read()))
 
-        os.remove(overwrite_target_path)
+        remove(overwrite_target_path)
 
     def test_save_with_indexes(self):
-        file = pyvtt.open(os.path.join(self.static_path, 'no-indexes.srt'))
+        file = vttopen(join(self.static_path, 'no-indexes.srt'))
         file.clean_indexes()
-        file_with_indexes = os.path.join(
+        file_with_indexes = join(
             file_path, 'tests', 'vtt_test', 'file_with_indexes.vtt')
-        file_with_indexes_target_path = os.path.join(
+        file_with_indexes_target_path = join(
             file_path, 'tests', 'vtt_test', 'file_with_indexes_target.vtt')
         file.save(file_with_indexes_target_path, include_indexes=True)
         self.assertEqual(
             bytes(open(file_with_indexes, 'rb').read()),
             bytes(open(file_with_indexes_target_path, 'rb').read()))
-        os.remove(file_with_indexes_target_path)
+        remove(file_with_indexes_target_path)
 
     def test_eol_convertion(self):
 
-        self.temp_eol_path = os.path.join(
+        self.temp_eol_path = join(
             self.static_path, 'temp_eol_conv.vtt')
         end_of_lines = ['\n', '\r', '\r\n']
         enc = 'utf-8'
@@ -267,20 +264,20 @@ class TestSerialization(unittest.TestCase):
             input_file.read()
             self.assertEqual(input_file.newlines, eols)
 
-            vtt_file = pyvtt.open(self.temp_eol_path, encoding=enc)
+            vtt_file = vttopen(self.temp_eol_path, encoding=enc)
             vtt_file.save(self.temp_eol_path, eol='\n')
 
             output_file = open(self.temp_eol_path, 'rU', encoding=enc)
             output_file.read()
             self.assertEqual(output_file.newlines, '\n')
 
-            os.remove(self.temp_eol_path)
+            remove(self.temp_eol_path)
 
     def test_eol_preservation(self):
 
         # Tests input eol is kept after saving
 
-        self.temp_eol_path = os.path.join(
+        self.temp_eol_path = join(
             self.static_path, 'temp_eol_preserv.vtt')
         end_of_lines = ['\n', '\r', '\r\n']
         enc = 'utf-8'
@@ -296,20 +293,20 @@ class TestSerialization(unittest.TestCase):
             input_file.read()
             self.assertEqual(eols, input_file.newlines)
 
-            vtt_file = pyvtt.open(self.temp_eol_path, encoding=enc)
+            vtt_file = vttopen(self.temp_eol_path, encoding=enc)
             vtt_file.save(self.temp_eol_path, eol=input_file.newlines)
 
             output_file = open(self.temp_eol_path, 'rU', encoding=enc)
             output_file.read()
             self.assertEqual(output_file.newlines, input_file.newlines)
 
-            os.remove(self.temp_eol_path)
+            remove(self.temp_eol_path)
 
 
-class TestSlice(unittest.TestCase):
+class TestSlice(TestCase):
 
     def setUp(self):
-        self.file = pyvtt.open(os.path.join(
+        self.file = vttopen(join(
             file_path, 'tests', 'static', 'utf-8.vtt'))
 
     def test_slice(self):
@@ -323,7 +320,7 @@ class TestSlice(unittest.TestCase):
         self.assertEqual(len(self.file.at(seconds=31)), 1)
 
 
-class TestShifting(unittest.TestCase):
+class TestShifting(TestCase):
 
     def test_shift(self):
         vtt_file = WebVTTFile([WebVTTItem()])
@@ -333,7 +330,7 @@ class TestShifting(unittest.TestCase):
         self.assertEqual(vtt_file[0].end, (2, 2, 2, 2))
 
 
-class TestText(unittest.TestCase):
+class TestText(TestCase):
 
     def test_single_item(self):
         vtt_file = WebVTTFile([
@@ -349,7 +346,7 @@ class TestText(unittest.TestCase):
         self.assertEqual(vtt_file.text, 'Hello\nWorld !')
 
 
-class TestDuckTyping(unittest.TestCase):
+class TestDuckTyping(TestCase):
 
     def setUp(self):
         self.duck = WebVTTFile()
@@ -359,9 +356,9 @@ class TestDuckTyping(unittest.TestCase):
 
         def iter_over_file():
             try:
-                for item in self.duck:
+                for _ in self.duck:
                     pass
-            except:
+            except Exception:
                 return False
             return True
         self.assertTrue(iter_over_file())
@@ -370,13 +367,13 @@ class TestDuckTyping(unittest.TestCase):
         self.assertTrue(hasattr(self.duck, '__delitem__'))
 
 
-class TestEOLProperty(unittest.TestCase):
+class TestEOLProperty(TestCase):
 
     def setUp(self):
         self.file = WebVTTFile()
 
     def test_default_value(self):
-        self.assertEqual(self.file.eol, os.linesep)
+        self.assertEqual(self.file.eol, linesep)
         vtt_file = WebVTTFile(eol='\r\n')
         self.assertEqual(vtt_file.eol, '\r\n')
 
@@ -385,16 +382,15 @@ class TestEOLProperty(unittest.TestCase):
         self.assertEqual(self.file.eol, '\r\n')
 
 
-class TestCleanIndexes(unittest.TestCase):
+class TestCleanIndexes(TestCase):
 
     def setUp(self):
-        self.file = pyvtt.open(os.path.join(file_path, 'tests', 'static',
-                                            'utf-8.vtt'))
+        self.file = vttopen(join(file_path, 'tests', 'static', 'utf-8.vtt'))
 
     def test_clean_indexes(self):
-        random.shuffle(self.file)
+        shuffle(self.file)
         for item in self.file:
-            item.index = random.randint(0, 1000)
+            item.index = randint(0, 1000)
         self.file.clean_indexes()
         self.assertEqual([i.index for i in self.file],
                          list(range(1, len(self.file) + 1)))
@@ -402,14 +398,16 @@ class TestCleanIndexes(unittest.TestCase):
             self.assertTrue(first <= second)
 
 
-class TestBOM(unittest.TestCase):
-    "In response of issue #6 https://github.com/byroot/pysrt/issues/6"
+class TestBOM(TestCase):
+    """
+    In response of issue #6 https://github.com/byroot/pysrt/issues/6
+    """
 
     def setUp(self):
-        self.base_path = os.path.join(file_path, 'tests', 'static')
+        self.base_path = join(file_path, 'tests', 'static')
 
     def __test_encoding(self, encoding):
-        vtt_file = pyvtt.open(os.path.join(self.base_path, encoding))
+        vtt_file = vttopen(join(self.base_path, encoding))
         self.assertEqual(len(vtt_file), 7)
         self.assertEqual(vtt_file[0].index, 1)
 
@@ -429,32 +427,33 @@ class TestBOM(unittest.TestCase):
         self.__test_encoding('bom-utf-32-be.srt')
 
 
-class TestIntegration(unittest.TestCase):
+class TestIntegration(TestCase):
     """
     Test some borderlines features found on
     http://ale5000.altervista.org/subtitles.htm
     """
 
     def setUp(self):
-        self.base_path = os.path.join(file_path, 'tests', 'static')
+        self.base_path = join(file_path, 'tests', 'static')
 
     def test_length(self):
-        path = os.path.join(self.base_path, 'capability_tester.srt')
-        file = pyvtt.open(path)
+        path = join(self.base_path, 'capability_tester.srt')
+        file = vttopen(path)
         self.assertEqual(len(file), 37)
 
     def test_empty_file(self):
-        self.assertRaises(InvalidFile, pyvtt.open, '/dev/null',
+        self.assertRaises(InvalidFile, vttopen, '/dev/null',
                           error_handling=WebVTTFile.ERROR_RAISE)
 
     def test_blank_lines(self):
-        items = list(pyvtt.stream(['\n'] * 20,
-                     error_handling=WebVTTFile.ERROR_RAISE))
+        items = list(stream(['\n'] * 20,
+                            error_handling=WebVTTFile.ERROR_RAISE))
         self.assertEqual(len(items), 0)
 
     def test_missing_indexes(self):
-        items = pyvtt.open(os.path.join(self.base_path, 'no-indexes.srt'))
+        items = vttopen(join(self.base_path, 'no-indexes.srt'))
         self.assertEqual(len(items), 7)
 
+
 if __name__ == '__main__':
-    unittest.main()
+    main()

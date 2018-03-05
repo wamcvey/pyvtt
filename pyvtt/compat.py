@@ -1,8 +1,7 @@
-
-import sys
+from sys import version_info
 
 # Syntax sugar.
-_ver = sys.version_info
+_ver = version_info
 
 #: Python 2.x?
 is_py2 = (_ver[0] == 2)

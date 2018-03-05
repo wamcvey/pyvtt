@@ -1,18 +1,17 @@
 #!/usr/bin/env python
-
-import os
-import sys
 from datetime import time
-import unittest
-import random
-
-file_path = os.path.join(os.path.dirname(__file__), '..')
-sys.path.insert(0, os.path.abspath(file_path))
+from os.path import abspath, dirname, join
+from random import choice, uniform
+from sys import maxsize
+from sys import path
+from unittest import main, TestCase
 
 from pyvtt import WebVTTTime, InvalidTimeString
 
+path.insert(0, abspath(join(dirname(__file__), '..')))
 
-class TestSimpleTime(unittest.TestCase):
+
+class TestSimpleTime(TestCase):
 
     def setUp(self):
         self.time = WebVTTTime()
@@ -57,7 +56,7 @@ class TestSimpleTime(unittest.TestCase):
     def test_shifting_backwards(self):
         self.time.shift(-1, -1, -1, -1)
         self.assertEqual(self.time, (-2, 58, 58, 999))
-        self.time = WebVTTTime(1,2,3,4)
+        self.time = WebVTTTime(1, 2, 3, 4)
         self.time.shift(-1, -1, -1, -1)
         self.assertEqual(self.time, (0, 1, 2, 3))
 
@@ -65,7 +64,7 @@ class TestSimpleTime(unittest.TestCase):
         self.assertRaises(AttributeError, lambda: WebVTTTime.hours)
 
 
-class TestTimeParsing(unittest.TestCase):
+class TestTimeParsing(TestCase):
     KNOWN_VALUES = (
         ('00:00:00.000', (0, 0, 0, 0)),
         ('00:00:00.001', (0, 0, 0, 1)),
@@ -86,36 +85,48 @@ class TestTimeParsing(unittest.TestCase):
     def test_negative_serialization(self):
         self.assertEqual('00:00:00.000', str(WebVTTTime(-1, 2, 3, 4)))
         self.assertEqual('00:00:00.000',
-                         str(WebVTTTime(-sys.maxsize, 2, 3, 4)))
+                         str(WebVTTTime(-maxsize, 2, 3, 4)))
         self.assertEqual('00:00:00.000', str(WebVTTTime(0, -2, 3, 4)))
         self.assertEqual('00:00:00.000', str(WebVTTTime(0, 0, -3, 4)))
         self.assertEqual('00:00:00.000', str(WebVTTTime(0, 0, 0, -4)))
-
 
     def test_invalid_time_string(self):
         self.assertRaises(InvalidTimeString, WebVTTTime.from_string, 'test')
 
     def test_invalid_int(self):
-        random_long = int(random.choice(list(range(0,10000000))))
-        self.assertRaises(ValueError, lambda: WebVTTTime.parse_int('test'))             # String
-        self.assertRaises(ValueError, lambda: WebVTTTime.parse_int(bin(42)))            # Binary
-        self.assertRaises(ValueError, lambda: WebVTTTime.parse_int('t'))                # Char
-        self.assertRaises(TypeError, WebVTTTime.parse_int)                              # None
-        self.assertRaises(TypeError, WebVTTTime.parse_int(None))                        # None
-        self.assertRaises(TypeError, WebVTTTime.parse_int(list(range(10))))                   # List
-        self.assertRaises(TypeError, WebVTTTime.parse_int((1,1)))                       # Tuple
-        self.assertRaises(TypeError, WebVTTTime.parse_int(True))                        # Boolean
-        self.assertRaises(TypeError, WebVTTTime.parse_int(random.uniform(1,100)))       # Float    
-        self.assertRaises(TypeError, WebVTTTime.parse_int(1j))                          # Complex
-        self.assertRaises(TypeError, WebVTTTime.parse_int(random_long))                 # Long
-        self.assertRaises(TypeError, WebVTTTime.parse_int({'Test1': 1, 'Test0': 0}))    # Dictionary
+        random_long = int(choice(list(range(0, 10000000))))
+        # String
+        self.assertRaises(ValueError, lambda: WebVTTTime.parse_int('test'))
+        # Binary
+        self.assertRaises(ValueError, lambda: WebVTTTime.parse_int(bin(42)))
+        # Char
+        self.assertRaises(ValueError, lambda: WebVTTTime.parse_int('t'))
+        # None
+        self.assertRaises(TypeError, WebVTTTime.parse_int)
+        # None
+        self.assertRaises(TypeError, WebVTTTime.parse_int(None))
+        # List
+        self.assertRaises(TypeError, WebVTTTime.parse_int(list(range(10))))
+        # Tuple
+        self.assertRaises(TypeError, WebVTTTime.parse_int((1, 1)))
+        # Boolean
+        self.assertRaises(TypeError, WebVTTTime.parse_int(True))
+        # Float
+        self.assertRaises(TypeError, WebVTTTime.parse_int(uniform(1, 100)))
+        # Complex
+        self.assertRaises(TypeError, WebVTTTime.parse_int(1j))
+        # Long
+        self.assertRaises(TypeError, WebVTTTime.parse_int(random_long))
+        # Dictionary
+        self.assertRaises(TypeError,
+                          WebVTTTime.parse_int({'Test1': 1, 'Test0': 0}))
 
     def test_max_values(self):
         self.assertEqual('99:59:59.999', str(WebVTTTime(99, 59, 59, 999)))
         self.assertEqual('100:40:39.999', str(WebVTTTime(99, 99, 99, 999)))
 
 
-class TestCoercing(unittest.TestCase):
+class TestCoercing(TestCase):
 
     def test_from_tuple(self):
         self.assertEqual((0, 0, 0, 0), WebVTTTime())
@@ -152,11 +163,11 @@ class TestCoercing(unittest.TestCase):
     def test_from_repr(self):
         self.time = WebVTTTime()
         self.assertEqual('WebVTTTime(0, 0, 0, 0)', self.time.__repr__())
-        self.time = WebVTTTime(1,1,1,1)
+        self.time = WebVTTTime(1, 1, 1, 1)
         self.assertEqual('WebVTTTime(1, 1, 1, 1)', self.time.__repr__())
 
 
-class TestOperators(unittest.TestCase):
+class TestOperators(TestCase):
 
     def setUp(self):
         self.time = WebVTTTime(1, 2, 3, 4)
@@ -187,4 +198,4 @@ class TestOperators(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    main()

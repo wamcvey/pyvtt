@@ -1,25 +1,22 @@
 # -*- coding: utf-8 -*-
-import os
-import sys
-import codecs
-
+from codecs import (BOM_UTF8, BOM_UTF16_BE, BOM_UTF16_LE, BOM_UTF32_BE,
+                    BOM_UTF32_LE, open as copen)
 try:
     from collections import UserList
 except ImportError:
     from UserList import UserList
-
-from itertools import chain
 from copy import copy
+from itertools import chain
+from os import linesep
+from sys import stderr
 
 from pyvtt.vttexc import Error, InvalidFile
 from pyvtt.vttitem import WebVTTItem
 from pyvtt.compat import str
 
-BOMS = ((codecs.BOM_UTF32_LE, 'utf_32_le'),
-        (codecs.BOM_UTF32_BE, 'utf_32_be'),
-        (codecs.BOM_UTF16_LE, 'utf_16_le'),
-        (codecs.BOM_UTF16_BE, 'utf_16_be'),
-        (codecs.BOM_UTF8, 'utf_8'))
+BOMS = ((BOM_UTF32_LE, 'utf_32_le'), (BOM_UTF32_BE, 'utf_32_be'),
+        (BOM_UTF16_LE, 'utf_16_le'), (BOM_UTF16_BE, 'utf_16_be'),
+        (BOM_UTF8, 'utf_8'))
 CODECS_BOMS = dict((codec, str(bom, codec)) for bom, codec in BOMS)
 BIGGER_BOM = max(len(bom) for bom, encoding in BOMS)
 
@@ -52,7 +49,7 @@ class WebVTTFile(UserList, object):
         self.encoding = encoding
 
     def _get_eol(self):
-        return self._eol or os.linesep
+        return self._eol or linesep
 
     def _set_eol(self, eol):
         self._eol = self._eol or eol
@@ -256,11 +253,11 @@ class WebVTTFile(UserList, object):
         path = path or self.path
         encoding = encoding or self.encoding
 
-        save_file = codecs.open(path, 'w+', encoding=encoding)
+        save_file = copen(path, 'w+', encoding=encoding)
         self.write_into(save_file, eol=eol, include_indexes=include_indexes)
         save_file.close()
 
-    def write_into(self, output_file, eol=None, encoding=None, include_indexes=False):
+    def write_into(self, output_file, eol=None, include_indexes=False):
         """
         write_into(output_file [, eol])
 
@@ -269,7 +266,8 @@ class WebVTTFile(UserList, object):
         `output_file` -> Any instance that respond to `write()`, typically a
         file object
 
-        If include_indexes is True the cue indexes will be included in the file.
+        If include_indexes is True the cue indexes will be included in the
+        file.
         """
         self._check_valid_len()
         output_eol = eol or self.eol
@@ -299,7 +297,7 @@ class WebVTTFile(UserList, object):
         for eol in ('\r\n', '\r', '\n'):
             if first_line.endswith(eol):
                 return eol
-        return os.linesep
+        return linesep
 
     @classmethod
     def _get_first_line(cls, string_iterable):
@@ -331,7 +329,7 @@ class WebVTTFile(UserList, object):
     @classmethod
     def _open_unicode_file(cls, path, claimed_encoding=None):
         encoding = claimed_encoding or cls._detect_encoding(path)
-        source_file = codecs.open(path, 'rU', encoding=encoding)
+        source_file = copen(path, 'rU', encoding=encoding)
 
         # get rid of BOM if any
         possible_bom = CODECS_BOMS.get(encoding, None)
@@ -348,6 +346,6 @@ class WebVTTFile(UserList, object):
             raise error
         if error_handling == cls.ERROR_LOG:
             name = type(error).__name__
-            sys.stderr.write('PyVTT-%s(line %s): \n' % (name, index))
-            sys.stderr.write(error.args[0])
-            sys.stderr.write('\n')
+            stderr.write('PyVTT-%s(line %s): \n' % (name, index))
+            stderr.write(error.args[0])
+            stderr.write('\n')

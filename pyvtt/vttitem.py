@@ -1,16 +1,17 @@
+# -*- coding: utf-8 -*-
 """
 WebVTT's subtitle parser
 """
+from re import compile
 
 from pyvtt.vttexc import InvalidItem
 from pyvtt.vtttime import WebVTTTime
 from pyvtt.comparablemixin import ComparableMixin
 from pyvtt.compat import str, is_py2
-import re
 
 
 # Workaround to compare regex pattern object type
-PATTERN_TYPE = type(re.compile(''))
+PATTERN_TYPE = type(compile(''))
 
 
 class WebVTTItem(ComparableMixin):
@@ -67,7 +68,7 @@ class WebVTTItem(ComparableMixin):
 
         # Pre process line by line to avoid some ugly corner cases
         text = '\n'.join([_line_tag_cleaner(i) for i in self.text.split('\n')])
-        return re.compile(r"{0}[^>]*?{1}".format(
+        return compile(r"{0}[^>]*?{1}".format(
             before_delimiter, after_delimiter)).sub('', text)
 
     @property
@@ -94,8 +95,8 @@ class WebVTTItem(ComparableMixin):
 
     def __str__(self):
         position = ' %s' % self.position if self.position.strip() else ''
-        return self.ITEM_PATTERN % (self.start, self.end,
-                                    position, self.text)
+        return self.ITEM_PATTERN % (self.start, self.end, position, self.text)
+
     if is_py2:
         __unicode__ = __str__
 
@@ -103,7 +104,7 @@ class WebVTTItem(ComparableMixin):
             raise NotImplementedError('Use unicode() instead!')
 
     def _cmpkey(self):
-        return (self.start, self.end)
+        return self.start, self.end
 
     def shift(self, *args, **kwargs):
         """

@@ -1,20 +1,17 @@
 #!/usr/bin/env python
-
-import os
-import sys
-import unittest
-import codecs
-import re
+from codecs import encode as cencode
+from os.path import abspath, dirname, join
+from re import compile
+from sys import path
+from unittest import main, TestCase
 
 from pyvtt import WebVTTItem, WebVTTTime, InvalidItem
 from pyvtt.compat import str, basestring, is_py3
 
-
-file_path = os.path.join(os.path.dirname(__file__), '..')
-sys.path.insert(0, os.path.abspath(file_path))
+path.insert(0, abspath(join(dirname(__file__), '..')))
 
 
-class TestAttributes(unittest.TestCase):
+class TestAttributes(TestCase):
 
     def setUp(self):
         self.item = WebVTTItem()
@@ -36,10 +33,10 @@ class TestAttributes(unittest.TestCase):
         self.assertTrue(isinstance(self.item.end, WebVTTTime))
 
 
-class TestDuration(unittest.TestCase):
+class TestDuration(TestCase):
 
     def setUp(self):
-        self.item = WebVTTItem(1, text="Hello world !")
+        self.item = WebVTTItem(1, text='Hello world !')
         self.item.shift(minutes=1)
         self.item.end.shift(seconds=20)
 
@@ -47,10 +44,10 @@ class TestDuration(unittest.TestCase):
         self.assertEqual(self.item.duration, (0, 0, 20, 0))
 
 
-class TestCPS(unittest.TestCase):
+class TestCPS(TestCase):
 
     def setUp(self):
-        self.item = WebVTTItem(1, text="Hello world !")
+        self.item = WebVTTItem(1, text='Hello world !')
         self.item.shift(minutes=1)
         self.item.end.shift(seconds=20)
 
@@ -58,7 +55,7 @@ class TestCPS(unittest.TestCase):
         self.assertEqual(self.item.characters_per_second, 0.65)
 
     def test_text_change(self):
-        self.item.text = "Hello world !\nHello world again !"
+        self.item.text = 'Hello world !\nHello world again !'
         self.assertEqual(self.item.characters_per_second, 1.6)
 
     def test_zero_duration(self):
@@ -72,23 +69,23 @@ class TestCPS(unittest.TestCase):
         self.assertEqual(self.item.characters_per_second, 2.45)
 
 
-class TestTagRemoval(unittest.TestCase):
+class TestTagRemoval(TestCase):
 
     def setUp(self):
-        self.item = WebVTTItem(1, text="Hello world !")
+        self.item = WebVTTItem(1, text='Hello world !')
         self.item.shift(minutes=1)
         self.item.end.shift(seconds=20)
 
     def test_italics_tag(self):
-        self.item.text = "<i>Hello world !</i>"
+        self.item.text = '<i>Hello world !</i>'
         self.assertEqual(self.item.text_without_tags, 'Hello world !')
 
     def test_bold_tag(self):
-        self.item.text = "<b>Hello world !</b>"
+        self.item.text = '<b>Hello world !</b>'
         self.assertEqual(self.item.text_without_tags, 'Hello world !')
 
     def test_underline_tag(self):
-        self.item.text = "<u>Hello world !</u>"
+        self.item.text = '<u>Hello world !</u>'
         self.assertEqual(self.item.text_without_tags, 'Hello world !')
 
     def test_color_tag(self):
@@ -112,30 +109,30 @@ class TestTagRemoval(unittest.TestCase):
             'Bold, italic, underlined\nred text, one, two, three.')
 
     def test_bracket_tag(self):
-        self.item.text = "[b]Hello world ![/b]"
+        self.item.text = '[b]Hello world ![/b]'
         self.assertEqual(self.item.text_without_brackets, 'Hello world !')
 
     def test_key_tag(self):
-        self.item.text = "{b}Hello world !{/b}"
+        self.item.text = '{b}Hello world !{/b}'
         self.assertEqual(self.item.text_without_keys, 'Hello world !')
 
     def test_replacements(self):
-        self.item.text = "P & G, A + B"
+        self.item.text = 'P & G, A + B'
         self.assertEqual(
             self.item.text_with_replacements([('&', 'and'), ('+', 'plus')]),
             'P and G, A plus B')
 
     def test_regex_eplacements(self):
-        self.item.text = "\\tag21 This is a test!"
+        self.item.text = '\\tag21 This is a test!'
         self.assertEqual(
-            self.item.text_with_replacements([(re.compile(r'\\tag\d+ '), '')]),
+            self.item.text_with_replacements([(compile(r'\\tag\d+ '), '')]),
             'This is a test!')
 
 
-class TestShifting(unittest.TestCase):
+class TestShifting(TestCase):
 
     def setUp(self):
-        self.item = WebVTTItem(1, text="Hello world !")
+        self.item = WebVTTItem(1, text='Hello world !')
         self.item.shift(minutes=1)
         self.item.end.shift(seconds=20)
 
@@ -162,10 +159,10 @@ class TestShifting(unittest.TestCase):
         self.assertEqual(self.item.characters_per_second, 0.325)
 
 
-class TestOperators(unittest.TestCase):
+class TestOperators(TestCase):
 
     def setUp(self):
-        self.item = WebVTTItem(1, text="Hello world!")
+        self.item = WebVTTItem(1, text='Hello world!')
         self.item.shift(minutes=1)
         self.item.end.shift(seconds=20)
 
@@ -173,7 +170,7 @@ class TestOperators(unittest.TestCase):
         self.assertEqual(self.item, self.item)
 
 
-class TestSerialAndParsing(unittest.TestCase):
+class TestSerialAndParsing(TestCase):
 
     def setUp(self):
         self.item = WebVTTItem(1, text="Hello world !")
@@ -196,8 +193,7 @@ class TestSerialAndParsing(unittest.TestCase):
 
     def test_from_string(self):
         self.assertEqual(WebVTTItem.from_string(self.string), self.item)
-        self.assertRaises(InvalidItem, WebVTTItem.from_string,
-                          self.bad_string)
+        self.assertRaises(InvalidItem, WebVTTItem.from_string, self.bad_string)
 
     def test_coordinates(self):
         item = WebVTTItem.from_string(self.coordinates)
@@ -261,10 +257,11 @@ class TestSerialAndParsing(unittest.TestCase):
             'mac_iceland', 'mac_latin2', 'mac_roman', 'mac_turkish',
             'ptcp154', 'shift_jis', 'shift_jis_2004', 'shift_jisx0213']
         for enc in non_unicode_encodings:
-            non_unicode = codecs.encode('non_unicode\n', enc)
+            non_unicode = cencode('non_unicode\n', enc)
             self.no_unicode_item = WebVTTItem(1, text=non_unicode)
             self.assertRaises(NotImplementedError, WebVTTItem.__str__,
                               self.no_unicode_item)
 
+
 if __name__ == '__main__':
-    unittest.main()
+    main()
