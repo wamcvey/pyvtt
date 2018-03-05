@@ -6,3 +6,4 @@ build
 pyvtt.egg-info
 .idea
 .eggs
+/venv
