@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # pylint: disable-all
-
-import os
-import re
-import sys
-import codecs
-import shutil
-import argparse
+from argparse import ArgumentParser, ArgumentTypeError, RawTextHelpFormatter
+from chardet import detect
+from codecs import open as copen, lookup
+from os.path import exists, splitext
+from re import compile
+from shutil import copy2
+from sys import stdout, argv
 from textwrap import dedent
 
-from chardet import detect
 from pyvtt import WebVTTFile, WebVTTTime, VERSION_STRING
 
 
@@ -18,9 +17,9 @@ def underline(string):
     return "\033[4m%s\033[0m" % string
 
 
-class TimeAwareArgumentParser(argparse.ArgumentParser):
+class TimeAwareArgumentParser(ArgumentParser):
 
-    RE_TIME_REPRESENTATION = re.compile(r'^\-?(\d+[hms]{0,2}){1,4}$')
+    RE_TIME_REPRESENTATION = compile(r'^\-?(\d+[hms]{0,2}){1,4}$')
 
     def parse_args(self, args=None, namespace=None):
         time_index = -1
@@ -39,7 +38,7 @@ class TimeAwareArgumentParser(argparse.ArgumentParser):
 class WebVTTShifter(object):
 
     BACKUP_EXTENSION = '.bak'
-    RE_TIME_STRING = re.compile(r'(\d+)([hms]{0,2})')
+    RE_TIME_STRING = compile(r'(\d+)([hms]{0,2})')
     UNIT_RATIOS = {
         'ms': 1,
         '': WebVTTTime.SECONDS_RATIO,
@@ -78,7 +77,8 @@ class WebVTTShifter(object):
     SPLIT_EPILOG = dedent("""\
 
         Examples:
-            For a movie in 2 parts with the first part 48 minutes and 18 seconds long:
+            For a movie in 2 parts with the first part 48 minutes and 18 
+            seconds long:
                 $ vtt split 48m18s movie.vtt
                 => creates movie.1.vtt and movie.2.vtt
 
@@ -88,8 +88,9 @@ class WebVTTShifter(object):
     """)
     FRAME_RATE_HELP = "A frame rate in fps (commonly 23.9 or 25)"
     ENCODING_HELP = dedent("""\
-        Change file encoding. Useful for players accepting only latin1 subtitles.
-        List of supported encodings: http://docs.python.org/library/codecs.html#standard-encodings
+        Change file encoding. Useful for players accepting only latin1 
+        subtitles. List of supported encodings: 
+        http://docs.python.org/library/codecs.html#standard-encodings
     """)
     BREAK_EPILOG = dedent("""\
         Break lines longer than defined length
@@ -100,30 +101,76 @@ class WebVTTShifter(object):
         self.output_file_path = None
 
     def build_parser(self):
-        parser = TimeAwareArgumentParser(description=self.DESCRIPTION, formatter_class=argparse.RawTextHelpFormatter)
-        parser.add_argument('-i', '--in-place', action='store_true', dest='in_place',
-            help="Edit file in-place, saving a backup as file.bak (do not works for the split command)")
-        parser.add_argument('-e', '--output-encoding', metavar=underline('encoding'), action='store', dest='output_encoding',
-            type=self.parse_encoding, help=self.ENCODING_HELP)
-        parser.add_argument('-v', '--version', action='version', version='%%(prog)s %s' % VERSION_STRING)
+        parser = TimeAwareArgumentParser(description=self.DESCRIPTION,
+                                         formatter_class=RawTextHelpFormatter)
+        parser.add_argument(
+            '-i',
+            '--in-place',
+            action='store_true',
+            dest='in_place',
+            help=('Edit file in-place, saving a backup as file.bak (do not '
+                  'works for the split command)'))
+        parser.add_argument('-e',
+                            '--output-encoding',
+                            metavar=underline('encoding'),
+                            action='store',
+                            dest='output_encoding',
+                            type=self.parse_encoding,
+                            help=self.ENCODING_HELP)
+        parser.add_argument('-v',
+                            '--version',
+                            action='version',
+                            version='%%(prog)s %s' % VERSION_STRING)
         subparsers = parser.add_subparsers(title='commands')
 
-        shift_parser = subparsers.add_parser('shift', help="Shift subtitles by specified time offset", epilog=self.SHIFT_EPILOG, formatter_class=argparse.RawTextHelpFormatter)
-        shift_parser.add_argument('time_offset', action='store', metavar=underline('offset'),
-            type=self.parse_time, help=self.TIMESTAMP_HELP)
+        shift_parser = subparsers.add_parser(
+            'shift',
+            help='Shift subtitles by specified time offset',
+            epilog=self.SHIFT_EPILOG,
+            formatter_class=RawTextHelpFormatter)
+        shift_parser.add_argument('time_offset',
+                                  action='store',
+                                  metavar=underline('offset'),
+                                  type=self.parse_time,
+                                  help=self.TIMESTAMP_HELP)
         shift_parser.set_defaults(action=self.shift)
 
-        rate_parser = subparsers.add_parser('rate', help="Convert subtitles from a frame rate to another", epilog=self.RATE_EPILOG, formatter_class=argparse.RawTextHelpFormatter)
-        rate_parser.add_argument('initial', action='store', type=float, help=self.FRAME_RATE_HELP)
-        rate_parser.add_argument('final', action='store', type=float, help=self.FRAME_RATE_HELP)
+        rate_parser = subparsers.add_parser(
+            'rate',
+            help="Convert subtitles from one frame rate to another",
+            epilog=self.RATE_EPILOG,
+            formatter_class=RawTextHelpFormatter)
+        rate_parser.add_argument('initial',
+                                 action='store',
+                                 type=float,
+                                 help=self.FRAME_RATE_HELP)
+        rate_parser.add_argument('final',
+                                 action='store',
+                                 type=float,
+                                 help=self.FRAME_RATE_HELP)
         rate_parser.set_defaults(action=self.rate)
 
-        split_parser = subparsers.add_parser('split', help="Split a file in multiple parts", epilog=self.SPLIT_EPILOG, formatter_class=argparse.RawTextHelpFormatter)
-        split_parser.add_argument('limits', action='store', nargs='+', type=self.parse_time, help=self.LIMITS_HELP)
+        split_parser = subparsers.add_parser(
+            'split',
+            help='Split a file in multiple parts',
+            epilog=self.SPLIT_EPILOG,
+            formatter_class=RawTextHelpFormatter)
+        split_parser.add_argument('limits',
+                                  action='store',
+                                  nargs='+',
+                                  type=self.parse_time,
+                                  help=self.LIMITS_HELP)
         split_parser.set_defaults(action=self.split)
 
-        break_parser = subparsers.add_parser('break', help="Break long lines", epilog=self.BREAK_EPILOG, formatter_class=argparse.RawTextHelpFormatter)
-        break_parser.add_argument('length', action='store', type=int, help=self.LENGTH_HELP)
+        break_parser = subparsers.add_parser(
+            'break',
+            help="Break long lines",
+            epilog=self.BREAK_EPILOG,
+            formatter_class=RawTextHelpFormatter)
+        break_parser.add_argument('length',
+                                  action='store',
+                                  type=int,
+                                  help=self.LENGTH_HELP)
         break_parser.set_defaults(action=self.break_lines)
 
         parser.add_argument('file', action='store')
@@ -140,15 +187,17 @@ class WebVTTShifter(object):
         negative = time_string.startswith('-')
         if negative:
             time_string = time_string[1:]
-        ordinal = sum(int(value) * self.UNIT_RATIOS[unit] for value, unit
-                        in self.RE_TIME_STRING.findall(time_string))
+        ordinal = sum(int(value) * self.UNIT_RATIOS[unit]
+                      for value, unit
+                      in self.RE_TIME_STRING.findall(time_string))
         return -ordinal if negative else ordinal
 
-    def parse_encoding(self, encoding_name):
+    @staticmethod
+    def parse_encoding(encoding_name):
         try:
-            codecs.lookup(encoding_name)
+            lookup(encoding_name)
         except LookupError as error:
-            raise argparse.ArgumentTypeError(error.message)
+            raise ArgumentTypeError(error.message)
         return encoding_name
 
     def shift(self):
@@ -161,24 +210,26 @@ class WebVTTShifter(object):
         self.input_file.write_into(self.output_file)
 
     def split(self):
-        limits = [0] + self.arguments.limits + [self.input_file[-1].end.ordinal + 1]
-        base_name, extension = os.path.splitext(self.arguments.file)
+        limits = ([0] + self.arguments.limits +
+                  [self.input_file[-1].end.ordinal + 1])
+        base_name, extension = splitext(self.arguments.file)
         for index, (start, end) in enumerate(zip(limits[:-1], limits[1:])):
             file_name = '%s.%s%s' % (base_name, index + 1, extension)
-            part_file = self.input_file.slice(ends_after=start, starts_before=end)
+            part_file = self.input_file.slice(ends_after=start,
+                                              starts_before=end)
             part_file.shift(milliseconds=-start)
             part_file.clean_indexes()
             part_file.save(path=file_name, encoding=self.output_encoding)
 
     def create_backup(self):
         backup_file = self.arguments.file + self.BACKUP_EXTENSION
-        if not os.path.exists(backup_file):
-            shutil.copy2(self.arguments.file, backup_file)
+        if not exists(backup_file):
+            copy2(self.arguments.file, backup_file)
         self.output_file_path = self.arguments.file
         self.arguments.file = backup_file
 
     def break_lines(self):
-        split_re = re.compile(r'(.{,%i})(?:\s+|$)' % self.arguments.length)
+        split_re = compile(r'(.{,%i})(?:\s+|$)' % self.arguments.length)
         for item in self.input_file:
             item.text = '\n'.join(split_re.split(item.text)[1::2])
         self.input_file.write_into(self.output_file)
@@ -195,25 +246,31 @@ class WebVTTShifter(object):
                 encoding = detect(content).get('encoding')
                 encoding = self.normalize_encoding(encoding)
 
-            self._source_file = WebVTTFile.open(self.arguments.file,
-                                                encoding=encoding, error_handling=WebVTTFile.ERROR_LOG)
+            self._source_file = WebVTTFile.open(
+                self.arguments.file,
+                encoding=encoding,
+                error_handling=WebVTTFile.ERROR_LOG)
         return self._source_file
 
     @property
     def output_file(self):
         if not hasattr(self, '_output_file'):
             if self.output_file_path:
-                self._output_file = codecs.open(self.output_file_path, 'w+', encoding=self.output_encoding)
+                self._output_file = copen(self.output_file_path,
+                                          'w+',
+                                          encoding=self.output_encoding)
             else:
-                self._output_file = sys.stdout
+                self._output_file = stdout
         return self._output_file
 
-    def normalize_encoding(self, encoding):
+    @staticmethod
+    def normalize_encoding(encoding):
         return encoding.lower().replace('-', '_')
 
 
 def main():
-    WebVTTShifter().run(sys.argv[1:])
+    WebVTTShifter().run(argv[1:])
+
 
 if __name__ == '__main__':
     main()

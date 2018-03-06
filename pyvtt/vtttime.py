@@ -2,8 +2,8 @@
 """
 WebVTT's time format parser: HH:MM:SS,mmm
 """
-import re
 from datetime import time
+from re import compile
 
 from pyvtt.vttexc import InvalidTimeString
 from pyvtt.comparablemixin import ComparableMixin
@@ -34,7 +34,7 @@ class TimeItemDescriptor(object):
 class WebVTTTime(ComparableMixin):
     TIME_PATTERN = '%02d:%02d:%02d.%03d'
     TIME_REPR = 'WebVTTTime(%d, %d, %d, %d)'
-    RE_TIMECODE = re.compile(r'^(\d+):([0-5][0-9]):([0-5][0-9])(?:$|[\.\,](\d+))')
+    RE_TIMECODE = compile(r'^(\d+):([0-5][0-9]):([0-5][0-9])(?:$|[\.\,](\d+))')
     SECONDS_RATIO = 1000
     MINUTES_RATIO = SECONDS_RATIO * 60
     HOURS_RATIO = MINUTES_RATIO * 60
@@ -51,10 +51,10 @@ class WebVTTTime(ComparableMixin):
         All arguments are optional and have a default value of 0.
         """
         super(WebVTTTime, self).__init__()
-        self.ordinal = hours * self.HOURS_RATIO \
-                     + minutes * self.MINUTES_RATIO \
-                     + seconds * self.SECONDS_RATIO \
-                     + milliseconds
+        self.ordinal = (hours * self.HOURS_RATIO
+                        + minutes * self.MINUTES_RATIO
+                        + seconds * self.SECONDS_RATIO
+                        + milliseconds)
 
     def __repr__(self):
         return self.TIME_REPR % tuple(self)
@@ -147,8 +147,8 @@ class WebVTTTime(ComparableMixin):
         """
         p = cls.RE_TIMECODE.match(source)
         try:
-            items = p.group(1,2,3,4)
-        except:
+            items = p.group(1, 2, 3, 4)
+        except Exception:
             raise InvalidTimeString
 
         return cls(*(cls.parse_int(i) for i in items))
@@ -166,7 +166,8 @@ class WebVTTTime(ComparableMixin):
         datetime.time -> WebVTTTime corresponding to time object
         """
         return cls(hours=source.hour, minutes=source.minute,
-            seconds=source.second, milliseconds=source.microsecond // 1000)
+                   seconds=source.second,
+                   milliseconds=source.microsecond // 1000)
 
     def to_time(self):
         """
